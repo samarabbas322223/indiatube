@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IndiaTube – Share Your World</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --saffron: #FF6B00;
+      --saffron-light: #FF8C38;
+      --saffron-glow: rgba(255,107,0,0.18);
+      --green: #138808;
+      --green-light: #1aad09;
+      --navy: #000080;
+      --bg: #0a0a0f;
+      --bg2: #13131a;
+      --bg3: #1c1c28;
+      --bg4: #252535;
+      --surface: #1e1e2e;
+      --surface2: #2a2a3e;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f0f5;
+      --text2: #a0a0b8;
+      --text3: #6a6a88;
+      --radius: 12px;
+      --sidebar-w: 240px;
+      --header-h: 60px;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .light-mode {
+      --bg: #f5f5f7;
+      --bg2: #ffffff;
+      --bg3: #efefef;
+      --bg4: #e5e5ea;
+      --surface: #ffffff;
+      --surface2: #f0f0f5;
+      --border: rgba(0,0,0,0.08);
+      --text: #1a1a2e;
+      --text2: #555570;
+      --text3: #888899;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Noto Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--transition),color var(--transition)}
+    a{text-decoration:none;color:inherit}
+    button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+    input,textarea,select{font-family:inherit;color:var(--text)}
+    /* SCROLLBAR */
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+```
+/* ==================== LAYOUT ==================== */
+#app{display:flex;flex-direction:column;min-height:100vh}
+.header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 16px;z-index:100;backdrop-filter:blur(12px)}
+.header-logo{display:flex;align-items:center;gap:8px;font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:800;color:var(--saffron);white-space:nowrap;min-width:160px}
+.header-logo .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--saffron),#ff3d00);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.header-logo .logo-flag{display:inline-flex;gap:1px;font-size:0.5rem;vertical-align:middle}
+.search-bar{flex:1;max-width:600px;display:flex;align-items:center;gap:0}
+.search-bar input{flex:1;background:var(--bg3);border:1.5px solid var(--border);border-right:none;border-radius:24px 0 0 24px;padding:8px 18px;font-size:0.95rem;outline:none;transition:border-color var(--transition);color:var(--text)}
+.search-bar input:focus{border-color:var(--saffron)}
+.search-bar input::placeholder{color:var(--text3)}
+.search-bar button{background:var(--bg3);border:1.5px solid var(--border);border-left:none;border-radius:0 24px 24px 0;padding:8px 18px;font-size:1.1rem;transition:background var(--transition)}
+.search-bar button:hover{background:var(--bg4)}
+.header-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.btn-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background var(--transition);background:transparent}
+.btn-icon:hover{background:var(--bg3)}
+.btn-primary{background:linear-gradient(135deg,var(--saffron),var(--saffron-light));color:#fff;border-radius:20px;padding:7px 16px;font-weight:600;font-size:0.88rem;transition:opacity var(--transition),transform var(--transition)}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,var(--saffron),var(--green));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:#fff;cursor:pointer;border:2px solid var(--saffron);flex-shrink:0}
+
+/* MAIN AREA */
+.main-wrap{display:flex;margin-top:var(--header-h);min-height:calc(100vh - var(--header-h))}
+/* SIDEBAR */
+.sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:12px 0;z-index:50;transition:transform var(--transition)}
+.sidebar.collapsed{transform:translateX(-100%)}
+.sidebar-section{padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px}
+.sidebar-section:last-child{border-bottom:none}
+.sidebar-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:6px 16px}
+.sidebar-item{display:flex;align-items:center;gap:12px;padding:9px 16px;border-radius:10px;margin:0 8px;cursor:pointer;transition:background var(--transition);font-size:0.88rem;font-weight:500;color:var(--text2)}
+.sidebar-item:hover,.sidebar-item.active{background:var(--saffron-glow);color:var(--saffron)}
+.sidebar-item .icon{font-size:1.1rem;width:24px;text-align:center}
+.sidebar-item .badge{margin-left:auto;background:var(--saffron);color:#fff;border-radius:10px;padding:1px 6px;font-size:0.7rem;font-weight:700}
+/* CONTENT */
+.content{margin-left:var(--sidebar-w);flex:1;transition:margin var(--transition)}
+.content.no-sidebar{margin-left:0}
+
+/* ==================== HOME ==================== */
+.home-page{padding:20px}
+.category-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:20px;scrollbar-width:none}
+.category-tabs::-webkit-scrollbar{display:none}
+.cat-tab{background:var(--bg3);border:1.5px solid var(--border);border-radius:20px;padding:6px 16px;font-size:0.84rem;font-weight:600;white-space:nowrap;transition:all var(--transition);color:var(--text2)}
+.cat-tab:hover,.cat-tab.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.section-title{font-family:'Baloo 2',cursive;font-size:1.25rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title .icon{color:var(--saffron)}
+.videos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-bottom:32px}
+/* VIDEO CARD */
+.video-card{cursor:pointer;border-radius:var(--radius);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition)}
+.video-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.video-thumb{position:relative;aspect-ratio:16/9;background:var(--bg3);overflow:hidden}
+.video-thumb img,.video-thumb video{width:100%;height:100%;object-fit:cover}
+.video-duration{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:#fff;border-radius:4px;padding:2px 6px;font-size:0.75rem;font-weight:600}
+.video-thumb .play-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(--transition)}
+.video-card:hover .play-overlay{opacity:1}
+.play-overlay .play-btn{width:48px;height:48px;background:rgba(255,107,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff}
+.video-info{padding:10px 4px}
+.video-meta-row{display:flex;gap:10px;align-items:flex-start}
+.video-ch-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;background:linear-gradient(135deg,var(--saffron),var(--green));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;color:#fff}
+.video-text{flex:1}
+.video-title{font-size:0.9rem;font-weight:600;line-height:1.35;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.video-channel{font-size:0.8rem;color:var(--text2);font-weight:500}
+.video-stats{font-size:0.78rem;color:var(--text3);margin-top:2px}
+/* TRENDING BADGE */
+.trending-badge{position:absolute;top:8px;left:8px;background:linear-gradient(135deg,var(--saffron),#ff3d00);color:#fff;border-radius:6px;padding:2px 8px;font-size:0.7rem;font-weight:700;display:flex;align-items:center;gap:4px}
+
+/* ==================== VIDEO PLAYER ==================== */
+.watch-page{display:flex;gap:24px;padding:20px;max-width:1500px}
+.player-section{flex:1;min-width:0}
+.video-player-wrap{position:relative;background:#000;border-radius:var(--radius);overflow:hidden;aspect-ratio:16/9}
+.video-player-wrap video{width:100%;height:100%;display:block}
+.custom-controls{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:12px 16px 10px;opacity:0;transition:opacity var(--transition)}
+.video-player-wrap:hover .custom-controls{opacity:1}
+.progress-bar{width:100%;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;cursor:pointer;margin-bottom:10px;position:relative}
+.progress-fill{height:100%;background:var(--saffron);border-radius:2px;pointer-events:none;position:relative}
+.progress-fill::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;background:#fff;border-radius:50%;opacity:0;transition:opacity var(--transition)}
+.progress-bar:hover .progress-fill::after{opacity:1}
+.controls-row{display:flex;align-items:center;gap:10px}
+.ctrl-btn{color:#fff;font-size:1.1rem;opacity:0.9;transition:opacity var(--transition)}
+.ctrl-btn:hover{opacity:1}
+.time-display{color:#fff;font-size:0.8rem;opacity:0.85}
+.vol-slider{width:80px;accent-color:var(--saffron);cursor:pointer}
+.ctrl-spacer{flex:1}
+.video-info-section{margin-top:16px}
+.video-page-title{font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:700;line-height:1.3;margin-bottom:10px}
+.video-actions-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.action-btn{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1.5px solid var(--border);border-radius:20px;padding:7px 14px;font-size:0.85rem;font-weight:600;transition:all var(--transition);color:var(--text2)}
+.action-btn:hover,.action-btn.active{background:var(--saffron-glow);border-color:var(--saffron);color:var(--saffron)}
+.channel-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px}
+.ch-info{flex:1}
+.ch-name-link{font-weight:700;font-size:0.95rem;cursor:pointer}
+.ch-name-link:hover{color:var(--saffron)}
+.ch-subs{font-size:0.8rem;color:var(--text3);margin-top:2px}
+.sub-btn{background:var(--text);color:var(--bg);border-radius:20px;padding:8px 18px;font-weight:700;font-size:0.85rem;transition:all var(--transition)}
+.sub-btn:hover{opacity:0.85}
+.sub-btn.subscribed{background:var(--bg3);color:var(--text2);border:1.5px solid var(--border)}
+.video-desc{background:var(--bg3);border-radius:var(--radius);padding:14px;font-size:0.88rem;line-height:1.6;color:var(--text2);cursor:pointer}
+/* COMMENTS */
+.comments-section{margin-top:20px}
+.comments-header{font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:700;margin-bottom:14px}
+.comment-input-row{display:flex;gap:10px;margin-bottom:18px}
+.comment-input-row textarea{flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;resize:none;font-size:0.88rem;outline:none;transition:border-color var(--transition);color:var(--text);min-height:60px}
+.comment-input-row textarea:focus{border-color:var(--saffron)}
+.comment-item{display:flex;gap:10px;margin-bottom:16px}
+.comment-body{flex:1}
+.comment-author{font-weight:600;font-size:0.85rem;margin-bottom:3px}
+.comment-text{font-size:0.88rem;color:var(--text2);line-height:1.5}
+.comment-meta{font-size:0.75rem;color:var(--text3);margin-top:4px;display:flex;gap:12px;align-items:center}
+.comment-like-btn{display:flex;align-items:center;gap:4px;cursor:pointer;transition:color var(--transition)}
+.comment-like-btn:hover{color:var(--saffron)}
+/* SIDEBAR RECOMMENDATIONS */
+.recommendations{width:380px;flex-shrink:0}
+.rec-card{display:flex;gap:10px;cursor:pointer;padding:8px 0;transition:opacity var(--transition)}
+.rec-card:hover{opacity:0.8}
+.rec-thumb{width:168px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg3)}
+.rec-thumb img{width:100%;height:100%;object-fit:cover}
+.rec-info{flex:1}
+.rec-title{font-size:0.85rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px}
+.rec-ch{font-size:0.78rem;color:var(--text3)}
+.rec-stats{font-size:0.75rem;color:var(--text3)}
+
+/* ==================== SHORTS ==================== */
+.shorts-page{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:var(--bg)}
+.shorts-container{flex:1;position:relative;overflow:hidden}
+.short-item{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1)}
+.short-video-wrap{position:relative;height:100%;max-width:400px;aspect-ratio:9/16;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.short-video-wrap video{width:100%;height:100%;object-fit:cover}
+.short-overlay{position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(0,0,0,0.8));display:flex;flex-direction:column;justify-content:flex-end;padding:20px}
+.short-title{font-size:1rem;font-weight:700;margin-bottom:6px}
+.short-channel{font-size:0.85rem;color:rgba(255,255,255,0.75)}
+.shorts-actions{display:flex;flex-direction:column;gap:16px;align-items:center;padding:20px 16px;justify-content:flex-end}
+.short-action-btn{display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff;font-size:0.75rem;cursor:pointer;transition:transform var(--transition)}
+.short-action-btn:hover{transform:scale(1.1)}
+.short-action-btn .icon{width:48px;height:48px;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.short-action-btn .icon.liked{background:rgba(255,107,0,0.6)}
+.shorts-nav{position:absolute;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px}
+.shorts-nav-btn{width:40px;height:40px;background:var(--bg3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:background var(--transition)}
+.shorts-nav-btn:hover{background:var(--saffron);color:#fff}
+
+/* ==================== UPLOAD ==================== */
+.upload-modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.upload-dialog{background:var(--bg2);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px}
+.upload-dialog h2{font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:0.85rem;font-weight:600;color:var(--text2);margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:0.9rem;outline:none;transition:border-color var(--transition);color:var(--text)}
+.form-input:focus{border-color:var(--saffron)}
+.form-input::placeholder{color:var(--text3)}
+textarea.form-input{resize:vertical;min-height:80px}
+.upload-drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all var(--transition);position:relative}
+.upload-drop-zone:hover,.upload-drop-zone.dragover{border-color:var(--saffron);background:var(--saffron-glow)}
+.upload-drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-drop-zone .drop-icon{font-size:2.5rem;margin-bottom:10px;display:block}
+.upload-drop-zone p{font-size:0.88rem;color:var(--text2)}
+.progress-wrap{margin-top:10px;background:var(--bg3);border-radius:6px;height:8px;overflow:hidden}
+.progress-fill-bar{height:100%;background:linear-gradient(90deg,var(--saffron),var(--green));border-radius:6px;transition:width 0.3s ease}
+.thumb-preview{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius);margin-top:8px}
+.btn-close{position:absolute;top:20px;right:20px;background:var(--bg3);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background var(--transition)}
+.btn-close:hover{background:var(--bg4)}
+
+/* ==================== AUTH ==================== */
+.auth-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-dialog{background:var(--bg2);border-radius:20px;width:100%;max-width:400px;padding:32px;position:relative}
+.auth-dialog h2{font-family:'Baloo 2',cursive;font-size:1.6rem;font-weight:800;margin-bottom:6px;text-align:center}
+.auth-dialog .subtitle{text-align:center;color:var(--text3);font-size:0.88rem;margin-bottom:24px}
+.auth-logo{text-align:center;margin-bottom:16px}
+.auth-logo .logo-big{font-size:2.2rem;font-family:'Baloo 2',cursive;font-weight:800;color:var(--saffron)}
+.auth-tabs{display:flex;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--border);margin-bottom:22px}
+.auth-tab{flex:1;padding:9px;text-align:center;font-weight:600;font-size:0.88rem;cursor:pointer;transition:all var(--transition);color:var(--text2)}
+.auth-tab.active{background:var(--saffron);color:#fff}
+.social-btn{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:0.9rem;transition:background var(--transition);margin-bottom:12px}
+.social-btn:hover{background:var(--bg4)}
+.or-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text3);font-size:0.8rem}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-switch{text-align:center;margin-top:16px;font-size:0.85rem;color:var(--text3)}
+.auth-switch span{color:var(--saffron);cursor:pointer;font-weight:600}
+
+/* ==================== CHANNEL PAGE ==================== */
+.channel-page{max-width:1200px;margin:0 auto;padding:0}
+.channel-banner{height:200px;background:linear-gradient(135deg,var(--saffron),var(--green),var(--navy));position:relative;overflow:hidden}
+.channel-banner img{width:100%;height:100%;object-fit:cover}
+.channel-header{background:var(--bg2);padding:0 20px 20px;border-bottom:1px solid var(--border)}
+.channel-info-row{display:flex;align-items:flex-end;gap:16px;margin-top:-40px;margin-bottom:16px}
+.channel-avatar-big{width:100px;height:100px;border-radius:50%;border:4px solid var(--bg2);object-fit:cover;background:linear-gradient(135deg,var(--saffron),var(--green));display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:800;color:#fff;flex-shrink:0}
+.channel-details{flex:1}
+.channel-name-big{font-family:'Baloo 2',cursive;font-size:1.6rem;font-weight:800;margin-bottom:4px}
+.channel-handle{font-size:0.85rem;color:var(--text3);margin-bottom:6px}
+.channel-bio{font-size:0.88rem;color:var(--text2);max-width:600px;line-height:1.5}
+.channel-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 20px}
+.channel-tab{padding:12px 20px;font-weight:600;font-size:0.88rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all var(--transition);color:var(--text2)}
+.channel-tab.active,.channel-tab:hover{color:var(--text);border-bottom-color:var(--text)}
+.channel-content{padding:20px}
+
+/* ==================== SEARCH PAGE ==================== */
+.search-page{padding:20px;max-width:1100px}
+.search-result-item{display:flex;gap:16px;cursor:pointer;padding:12px 0;border-bottom:1px solid var(--border);transition:opacity var(--transition)}
+.search-result-item:hover{opacity:0.8}
+.search-result-thumb{width:240px;aspect-ratio:16/9;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--bg3)}
+.search-result-thumb img{width:100%;height:100%;object-fit:cover}
+.search-result-info{flex:1}
+.search-result-title{font-size:1rem;font-weight:600;line-height:1.4;margin-bottom:6px}
+.search-result-meta{font-size:0.82rem;color:var(--text3);margin-bottom:10px}
+.search-result-desc{font-size:0.85rem;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ==================== DROPDOWN MENUS ==================== */
+.dropdown{position:relative}
+.dropdown-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:200;overflow:hidden;animation:fadeIn 0.15s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:0.88rem;cursor:pointer;transition:background var(--transition);color:var(--text2)}
+.dropdown-item:hover{background:var(--bg3);color:var(--text)}
+.dropdown-divider{height:1px;background:var(--border);margin:4px 0}
+
+/* ==================== NOTIFICATIONS ==================== */
+.notif-panel{position:fixed;top:var(--header-h);right:0;width:360px;background:var(--bg2);border-left:1px solid var(--border);height:calc(100vh - var(--header-h));overflow-y:auto;z-index:150;transform:translateX(100%);transition:transform var(--transition);padding:16px}
+.notif-panel.open{transform:translateX(0)}
+.notif-item{display:flex;gap:10px;padding:12px;border-radius:var(--radius);cursor:pointer;transition:background var(--transition);margin-bottom:4px}
+.notif-item:hover{background:var(--bg3)}
+.notif-item.unread{background:var(--saffron-glow)}
+.notif-text{flex:1;font-size:0.85rem;line-height:1.4}
+.notif-time{font-size:0.75rem;color:var(--text3);margin-top:4px}
+
+/* ==================== TOAST ==================== */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:0.88rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:flex;align-items:center;gap:10px;animation:slideIn 0.3s ease;max-width:300px}
+@keyframes slideIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid #e74c3c}
+.toast.info{border-left:3px solid var(--saffron)}
+
+/* ==================== LOADING ==================== */
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;margin:auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ==================== EMPTY STATE ==================== */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state .icon{font-size:3.5rem;margin-bottom:16px;display:block}
+.empty-state h3{font-family:'Baloo 2',cursive;font-size:1.2rem;font-weight:700;color:var(--text2);margin-bottom:8px}
+.empty-state p{font-size:0.88rem;max-width:300px;margin:0 auto;line-height:1.6}
+
+/* ==================== PLAYLIST / HISTORY PAGES ==================== */
+.history-list .video-card{display:flex;gap:12px;border-radius:var(--radius);padding:8px;background:transparent}
+.history-list .video-thumb{width:168px;aspect-ratio:16/9;flex-shrink:0;border-radius:10px}
+.history-list .video-info{padding:0}
+
+/* ==================== RESPONSIVE ==================== */
+@media(max-width:1100px){.recommendations{width:320px}}
+@media(max-width:900px){
+  .watch-page{flex-direction:column}
+  .recommendations{width:100%}
+  .rec-thumb{width:140px}
+}
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.mobile-open{transform:translateX(0);width:240px;z-index:200}
+  .content{margin-left:0}
+  .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150;display:none}
+  .sidebar-overlay.show{display:block}
+  .videos-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .search-bar{max-width:none}
+  .header-logo span{display:none}
+  .watch-page{padding:0}
+  .video-player-wrap{border-radius:0}
+  .home-page{padding:12px}
+  .search-result-thumb{width:140px}
+}
+@media(max-width:480px){
+  .videos-grid{grid-template-columns:1fr 1fr}
+  .channel-banner{height:120px}
+  .channel-avatar-big{width:72px;height:72px;font-size:1.6rem}
+  .channel-name-big{font-size:1.2rem}
+}
+
+/* ==================== PROFILE PAGE ==================== */
+.profile-page{max-width:600px;margin:0 auto;padding:20px}
+.profile-avatar-big{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--green));display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:800;color:#fff;margin:0 auto 16px;cursor:pointer;transition:opacity var(--transition)}
+.profile-avatar-big:hover{opacity:0.85}
+
+/* WATCH LATER / PLAYLISTS */
+.playlist-card{background:var(--bg3);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform var(--transition)}
+.playlist-card:hover{transform:translateY(-3px)}
+.playlist-thumb-wrap{position:relative;aspect-ratio:16/9}
+.playlist-thumb-wrap img{width:100%;height:100%;object-fit:cover}
+.playlist-count-overlay{position:absolute;right:0;top:0;bottom:0;width:40%;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:#fff}
+.playlist-info{padding:10px}
+```
+
+  </style>
+</head>
+<body>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, increment, arrayUnion, arrayRemove, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+apiKey: “AIzaSyApzeRe7_QQAjyobAXpY2YB7XCozgrQIjc”,
+authDomain: “indiatube-fdb39.firebaseapp.com”,
+projectId: “indiatube-fdb39”,
+storageBucket: “indiatube-fdb39.firebasestorage.app”,
+messagingSenderId: “1068811001974”,
+appId: “1:1068811001974:web:59348b8c1fdc3f9a6c3f57”,
+measurementId: “G-6YMSXJC8SJ”
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ==================== STATE ====================
+let state = {
+user: null,
+userProfile: null,
+page: ‘home’,
+videos: [],
+shorts: [],
+currentVideo: null,
+comments: [],
+searchQuery: ‘’,
+searchResults: [],
+selectedCategory: ‘All’,
+darkMode: true,
+notifOpen: false,
+notifications: [],
+subscriptions: [],
+watchHistory: [],
+watchLater: [],
+playlists: [],
+channelData: null,
+shortsIndex: 0,
+loading: false,
+sidebarOpen: window.innerWidth > 768,
+activeDropdown: null,
+unsubFns: []
+};
+
+const CATEGORIES = [‘All’,‘Music’,‘Gaming’,‘Education’,‘Comedy’,‘Sports’,‘Tech’,‘News’,‘Vlogs’,‘Shorts’,‘Food’,‘Travel’];
+
+// ==================== UTILS ====================
+function formatViews(n){if(!n)return’0 views’;if(n>=1e6)return(n/1e6).toFixed(1)+‘M views’;if(n>=1e3)return(n/1e3).toFixed(1)+‘K views’;return n+’ views’}
+function formatTime(sec){if(!sec||isNaN(sec))return’0:00’;const m=Math.floor(sec/60),s=Math.floor(sec%60);return m+’:’+(s<10?‘0’:’’)+s}
+function timeAgo(ts){if(!ts)return’’;const d=ts.toDate?ts.toDate():new Date(ts);const diff=(Date.now()-d)/1000;if(diff<60)return’just now’;if(diff<3600)return Math.floor(diff/60)+‘m ago’;if(diff<86400)return Math.floor(diff/3600)+‘h ago’;if(diff<2592000)return Math.floor(diff/86400)+‘d ago’;return Math.floor(diff/2592000)+‘mo ago’}
+function initials(name){if(!name)return’U’;return name.split(’ ‘).map(w=>w[0]).join(’’).toUpperCase().slice(0,2)}
+function showToast(msg,type=‘info’){
+const c=document.getElementById(‘toast-container’)||createToastContainer();
+const t=document.createElement(‘div’);
+t.className=`toast ${type}`;
+const icons={success:‘✅’,error:‘❌’,info:‘ℹ️’};
+t.innerHTML=`<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+c.appendChild(t);
+setTimeout(()=>{t.style.opacity=‘0’;t.style.transform=‘translateX(50px)’;t.style.transition=‘0.3s’;setTimeout(()=>t.remove(),300)},3000);
+}
+function createToastContainer(){const c=document.createElement(‘div’);c.id=‘toast-container’;c.className=‘toast-container’;document.body.appendChild(c);return c}
+function avatarEl(url,name,size=34){
+if(url)return`<img src="${url}" class="avatar" style="width:${size}px;height:${size}px" alt="${name||''}">`;
+return`<div class="avatar" style="width:${size}px;height:${size}px;font-size:${size*0.35}px">${initials(name)}</div>`;
+}
+function videoCardHTML(v,showTrending=false){
+const thumb=v.thumbnailUrl?`<img src="${v.thumbnailUrl}" alt="${v.title}" loading="lazy">`:`<div style="background:linear-gradient(135deg,var(--bg3),var(--bg4));width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>`;
+return`<div class="video-card" onclick="playVideo('${v.id}')"> <div class="video-thumb"> ${thumb} ${showTrending?'<div class="trending-badge">🔥 Trending</div>':''} <div class="video-duration">${v.duration||'0:00'}</div> <div class="play-overlay"><div class="play-btn">▶</div></div> </div> <div class="video-info"> <div class="video-meta-row"> <div class="video-ch-avatar">${v.channelAvatar?`<img src="${v.channelAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span>${initials(v.channelName)}</span>`}</div>
+<div class="video-text">
+<div class="video-title">${v.title||‘Untitled’}</div>
+<div class="video-channel">${v.channelName||‘Unknown Channel’}</div>
+<div class="video-stats">${formatViews(v.views)} • ${timeAgo(v.createdAt)}</div>
+</div>
+</div>
+</div>
+
+  </div>`;
+}
+
+// ==================== FIRESTORE ====================
+async function fetchVideos(cat=‘All’){
+try{
+let q;
+if(cat===‘All’)q=query(collection(db,‘videos’),orderBy(‘createdAt’,‘desc’),limit(40));
+else q=query(collection(db,‘videos’),where(‘category’,’==’,cat),orderBy(‘createdAt’,‘desc’),limit(40));
+const snap=await getDocs(q);
+return snap.docs.map(d=>({id:d.id,…d.data()}));
+}catch(e){console.error(e);return[]}
+}
+async function fetchShorts(){
+try{
+const q=query(collection(db,‘videos’),where(‘isShort’,’==’,true),orderBy(‘createdAt’,‘desc’),limit(20));
+const snap=await getDocs(q);
+return snap.docs.map(d=>({id:d.id,…d.data()}));
+}catch(e){return[]}
+}
+async function fetchVideoById(id){
+try{
+const snap=await getDoc(doc(db,‘videos’,id));
+if(snap.exists())return{id:snap.id,…snap.data()};
+}catch(e){}
+return null;
+}
+async function fetchComments(videoId){
+try{
+const q=query(collection(db,‘comments’),where(‘videoId’,’==’,videoId),orderBy(‘createdAt’,‘desc’));
+const snap=await getDocs(q);
+return snap.docs.map(d=>({id:d.id,…d.data()}));
+}catch(e){return[]}
+}
+async function fetchUserProfile(uid){
+try{
+const snap=await getDoc(doc(db,‘users’,uid));
+if(snap.exists())return{uid,…snap.data()};
+}catch(e){}
+return null;
+}
+async function fetchChannel(uid){
+return fetchUserProfile(uid);
+}
+async function fetchChannelVideos(uid){
+try{
+const q=query(collection(db,‘videos’),where(‘uploaderId’,’==’,uid),orderBy(‘createdAt’,‘desc’));
+const snap=await getDocs(q);
+return snap.docs.map(d=>({id:d.id,…d.data()}));
+}catch(e){return[]}
+}
+async function createOrUpdateUserProfile(user,extra={}){
+const ref=doc(db,‘users’,user.uid);
+const snap=await getDoc(ref);
+if(!snap.exists()){
+await setDoc(ref,{
+displayName:user.displayName||‘New Creator’,
+email:user.email,
+photoURL:user.photoURL||’’,
+bio:‘Hey there! I am using IndiaTube.’,
+channelName:user.displayName||‘My Channel’,
+subscribers:[],
+subscriberCount:0,
+createdAt:serverTimestamp(),
+…extra
+});
+}
+return await fetchUserProfile(user.uid);
+}
+async function searchVideos(q){
+if(!q.trim())return[];
+const all=await fetchVideos();
+const lq=q.toLowerCase();
+return all.filter(v=>(v.title||’’).toLowerCase().includes(lq)||(v.tags||[]).some(t=>t.toLowerCase().includes(lq))||(v.category||’’).toLowerCase().includes(lq));
+}
+async function likeVideo(videoId){
+if(!state.user){showToast(‘Sign in to like videos’,‘error’);return;}
+const ref=doc(db,‘videos’,videoId);
+const snap=await getDoc(ref);
+if(!snap.exists())return;
+const data=snap.data();
+const likes=data.likes||[];
+const dislikes=data.dislikes||[];
+if(likes.includes(state.user.uid)){
+await updateDoc(ref,{likes:arrayRemove(state.user.uid)});
+}else{
+await updateDoc(ref,{likes:arrayUnion(state.user.uid),dislikes:arrayRemove(state.user.uid)});
+addNotification(data.uploaderId,`${state.userProfile?.displayName||'Someone'} liked your video: ${data.title}`,videoId);
+}
+if(state.currentVideo?.id===videoId){
+state.currentVideo=await fetchVideoById(videoId);
+renderWatchPage();
+}
+}
+async function dislikeVideo(videoId){
+if(!state.user){showToast(‘Sign in to dislike’,‘error’);return;}
+const ref=doc(db,‘videos’,videoId);
+const snap=await getDoc(ref);
+const data=snap.data();
+const dislikes=data.dislikes||[];
+if(dislikes.includes(state.user.uid)){
+await updateDoc(ref,{dislikes:arrayRemove(state.user.uid)});
+}else{
+await updateDoc(ref,{dislikes:arrayUnion(state.user.uid),likes:arrayRemove(state.user.uid)});
+}
+if(state.currentVideo?.id===videoId){
+state.currentVideo=await fetchVideoById(videoId);
+renderWatchPage();
+}
+}
+async function addComment(videoId,text){
+if(!state.user){showToast(‘Sign in to comment’,‘error’);return;}
+if(!text.trim())return;
+await addDoc(collection(db,‘comments’),{
+videoId,
+text:text.trim(),
+authorId:state.user.uid,
+authorName:state.userProfile?.displayName||state.user.displayName||‘User’,
+authorAvatar:state.userProfile?.photoURL||state.user.photoURL||’’,
+likes:[],
+createdAt:serverTimestamp()
+});
+const vidRef=doc(db,‘videos’,videoId);
+await updateDoc(vidRef,{commentCount:increment(1)});
+addNotification(state.currentVideo?.uploaderId,`${state.userProfile?.displayName||'Someone'} commented on your video`,videoId);
+}
+async function toggleSubscribe(channelUid){
+if(!state.user){showToast(‘Sign in to subscribe’,‘error’);return;}
+if(channelUid===state.user.uid){showToast(“You can’t subscribe to yourself”,‘info’);return;}
+const chRef=doc(db,‘users’,channelUid);
+const myRef=doc(db,‘users’,state.user.uid);
+const chSnap=await getDoc(chRef);
+if(!chSnap.exists())return;
+const subs=chSnap.data().subscribers||[];
+if(subs.includes(state.user.uid)){
+await updateDoc(chRef,{subscribers:arrayRemove(state.user.uid),subscriberCount:increment(-1)});
+state.subscriptions=state.subscriptions.filter(s=>s!==channelUid);
+}else{
+await updateDoc(chRef,{subscribers:arrayUnion(state.user.uid),subscriberCount:increment(1)});
+state.subscriptions=[…state.subscriptions,channelUid];
+addNotification(channelUid,`${state.userProfile?.displayName||'Someone'} subscribed to your channel`,’’);
+}
+await updateDoc(myRef,{subscriptions:state.subscriptions});
+if(state.page===‘watch’)renderWatchPage();
+if(state.page===‘channel’)renderChannelPage();
+}
+async function addToWatchLater(videoId){
+if(!state.user){showToast(‘Sign in first’,‘error’);return;}
+if(state.watchLater.includes(videoId)){showToast(‘Already in Watch Later’,‘info’);return;}
+state.watchLater=[…state.watchLater,videoId];
+await updateDoc(doc(db,‘users’,state.user.uid),{watchLater:state.watchLater});
+showToast(‘Added to Watch Later ✅’,‘success’);
+}
+async function addNotification(toUid,text,videoId){
+if(!toUid||toUid===state.user?.uid)return;
+try{
+await addDoc(collection(db,‘notifications’),{
+toUid,text,videoId,
+fromName:state.userProfile?.displayName||‘Someone’,
+read:false,
+createdAt:serverTimestamp()
+});
+}catch(e){}
+}
+async function fetchNotifications(){
+if(!state.user)return[];
+try{
+const q=query(collection(db,‘notifications’),where(‘toUid’,’==’,state.user.uid),orderBy(‘createdAt’,‘desc’),limit(20));
+const snap=await getDocs(q);
+return snap.docs.map(d=>({id:d.id,…d.data()}));
+}catch(e){return[]}
+}
+async function incrementViews(videoId){
+try{await updateDoc(doc(db,‘videos’,videoId),{views:increment(1)});}catch(e){}
+}
+async function addToHistory(videoId){
+if(!state.user)return;
+const wh=state.watchHistory.filter(h=>h!==videoId);
+state.watchHistory=[videoId,…wh].slice(0,50);
+try{await updateDoc(doc(db,‘users’,state.user.uid),{watchHistory:state.watchHistory});}catch(e){}
+}
+
+// ==================== UPLOAD ====================
+async function uploadVideo(formData){
+if(!state.user){showToast(‘Sign in to upload’,‘error’);return;}
+const{title,description,category,tags,isShort,videoFile,thumbnailFile}=formData;
+if(!videoFile){showToast(‘Please select a video file’,‘error’);return;}
+if(!title.trim()){showToast(‘Please enter a title’,‘error’);return;}
+showToast(‘Uploading video…’,‘info’);
+const progBar=document.getElementById(‘upload-prog-bar’);
+const progWrap=document.getElementById(‘upload-prog-wrap’);
+if(progWrap)progWrap.style.display=‘block’;
+try{
+// Upload video
+const vRef=ref(storage,`videos/${state.user.uid}/${Date.now()}_${videoFile.name}`);
+const vTask=uploadBytesResumable(vRef,videoFile);
+const videoUrl=await new Promise((res,rej)=>{
+vTask.on(‘state_changed’,snap=>{
+const pct=(snap.bytesTransferred/snap.totalBytes)*100;
+if(progBar)progBar.style.width=pct+’%’;
+},rej,async()=>res(await getDownloadURL(vTask.snapshot.ref)));
+});
+// Upload thumbnail
+let thumbnailUrl=’’;
+if(thumbnailFile){
+const tRef=ref(storage,`thumbnails/${state.user.uid}/${Date.now()}_${thumbnailFile.name}`);
+await uploadBytesResumable(tRef,thumbnailFile);
+thumbnailUrl=await getDownloadURL(tRef);
+}
+// Get video duration (attempt)
+let duration=‘0:00’;
+try{
+const vid=document.createElement(‘video’);
+vid.src=URL.createObjectURL(videoFile);
+duration=await new Promise(r=>{vid.onloadedmetadata=()=>r(formatTime(vid.duration));setTimeout(()=>r(‘0:00’),3000)});
+}catch(e){}
+await addDoc(collection(db,‘videos’),{
+title:title.trim(),
+description:description.trim(),
+category:category||‘All’,
+tags:tags.split(’,’).map(t=>t.trim()).filter(Boolean),
+isShort:!!isShort,
+videoUrl,
+thumbnailUrl,
+duration,
+uploaderId:state.user.uid,
+channelName:state.userProfile?.channelName||state.user.displayName||‘My Channel’,
+channelAvatar:state.userProfile?.photoURL||state.user.photoURL||’’,
+views:0,
+likes:[],
+dislikes:[],
+commentCount:0,
+createdAt:serverTimestamp()
+});
+showToast(‘Video uploaded successfully! 🎉’,‘success’);
+closeUploadModal();
+setTimeout(()=>navigateTo(‘home’),1000);
+}catch(e){
+console.error(e);
+showToast(’Upload failed: ’+e.message,‘error’);
+}
+}
+
+// ==================== AUTH ====================
+async function signUpUser(email,password,displayName){
+try{
+const cred=await createUserWithEmailAndPassword(auth,email,password);
+await updateProfile(cred.user,{displayName});
+await createOrUpdateUserProfile({…cred.user,displayName});
+showToast(‘Welcome to IndiaTube! 🎉’,‘success’);
+closeAuthModal();
+}catch(e){showToast(e.message,‘error’)}
+}
+async function loginUser(email,password){
+try{
+await signInWithEmailAndPassword(auth,email,password);
+showToast(‘Welcome back! 👋’,‘success’);
+closeAuthModal();
+}catch(e){showToast(e.message,‘error’)}
+}
+async function loginWithGoogle(){
+try{
+const cred=await signInWithPopup(auth,googleProvider);
+await createOrUpdateUserProfile(cred.user);
+showToast(‘Welcome! 🎉’,‘success’);
+closeAuthModal();
+}catch(e){showToast(e.message,‘error’)}
+}
+async function logoutUser(){
+await signOut(auth);
+state.user=null;
+state.userProfile=null;
+state.subscriptions=[];
+state.watchHistory=[];
+state.watchLater=[];
+showToast(‘Signed out’,‘info’);
+navigateTo(‘home’);
+}
+
+// ==================== NAVIGATION ====================
+function navigateTo(page,extra={}){
+state.page=page;
+Object.assign(state,extra);
+// Close mobile sidebar
+if(window.innerWidth<=768){
+const sidebar=document.getElementById(‘sidebar’);
+const overlay=document.getElementById(‘sidebar-overlay’);
+if(sidebar)sidebar.classList.remove(‘mobile-open’);
+if(overlay)overlay.classList.remove(‘show’);
+}
+renderApp();
+window.scrollTo(0,0);
+}
+async function playVideo(id){
+state.loading=true;
+const v=await fetchVideoById(id);
+if(!v){showToast(‘Video not found’,‘error’);return;}
+state.currentVideo=v;
+state.page=‘watch’;
+state.comments=await fetchComments(id);
+state.loading=false;
+renderApp();
+incrementViews(id);
+addToHistory(id);
+}
+
+// ==================== RENDER MAIN ====================
+function renderApp(){
+const root=document.getElementById(‘app’);
+root.innerHTML=renderHeader()+renderSidebar()+`<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div><div class="main-wrap"><div class="content" id="main-content">${renderPage()}</div></div>`+renderUploadModal()+renderAuthModal()+renderNotifPanel()+renderUserDropdown()+’<div id="toast-container" class="toast-container"></div>’;
+afterRender();
+}
+function renderPage(){
+if(state.page===‘home’)return renderHomePage();
+if(state.page===‘watch’)return renderWatchPage();
+if(state.page===‘shorts’)return renderShortsPage();
+if(state.page===‘search’)return renderSearchPage();
+if(state.page===‘channel’)return renderChannelPage();
+if(state.page===‘upload’)return renderUploadPage();
+if(state.page===‘history’)return renderHistoryPage();
+if(state.page===‘watch-later’)return renderWatchLaterPage();
+if(state.page===‘subscriptions’)return renderSubscriptionsPage();
+if(state.page===‘profile’)return renderProfilePage();
+return renderHomePage();
+}
+
+// ==================== HEADER ====================
+function renderHeader(){
+const user=state.user;
+return`<header class="header" id="header"> <button class="btn-icon" onclick="toggleSidebar()" title="Menu">☰</button> <div class="header-logo" onclick="navigateTo('home')" style="cursor:pointer"> <div class="logo-icon">▶</div> <span>IndiaTube</span> </div> <div class="search-bar"> <input id="search-input" type="text" placeholder="Search videos..." value="${state.searchQuery}" onkeydown="if(event.key==='Enter')doSearch(this.value)" oninput="updateSearchQuery(this.value)"> <button onclick="doSearch(document.getElementById('search-input').value)">🔍</button> </div> <div class="header-actions"> <button class="btn-icon" onclick="toggleDarkMode()" title="Toggle theme">${state.darkMode?'☀️':'🌙'}</button> ${user?`
+<button class="btn-icon" onclick="toggleNotif()" title="Notifications" id="notif-btn">🔔${state.notifications.filter(n=>!n.read).length>0?`<span style="position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--saffron);border-radius:50%;display:inline-block"></span>`:’’}</button>
+<button class="btn-primary" onclick="openUploadModal()">+ Upload</button>
+<div class="dropdown" id="user-dropdown-wrap">
+<div onclick="toggleDropdown('user')">${avatarEl(state.userProfile?.photoURL||state.user?.photoURL,state.userProfile?.displayName||state.user?.displayName)}</div>
+</div>
+`:`<button class="btn-primary" onclick="openAuthModal()">Sign In</button>`}
+</div>
+
+  </header>`;
+}
+
+// ==================== SIDEBAR ====================
+function renderSidebar(){
+const p=state.page;
+const subs=state.subscriptions;
+return`<nav class="sidebar ${state.sidebarOpen&&window.innerWidth>768?'':'collapsed'}" id="sidebar"> <div class="sidebar-section"> <div class="sidebar-item ${p==='home'?'active':''}" onclick="navigateTo('home')"><span class="icon">🏠</span>Home</div> <div class="sidebar-item ${p==='shorts'?'active':''}" onclick="navigateTo('shorts')"><span class="icon">📱</span>Shorts</div> ${state.user?`<div class="sidebar-item ${p==='subscriptions'?'active':''}" onclick="navigateTo('subscriptions')"><span class="icon">🔔</span>Subscriptions</div>`:''} </div> ${state.user?`<div class="sidebar-section">
+<div class="sidebar-label">You</div>
+<div class="sidebar-item ${p==='profile'?'active':''}" onclick="navigateTo('profile')"><span class="icon">👤</span>Your Channel</div>
+<div class="sidebar-item ${p==='history'?'active':''}" onclick="navigateTo('history')"><span class="icon">🕐</span>History</div>
+<div class="sidebar-item ${p==='watch-later'?'active':''}" onclick="navigateTo('watch-later')"><span class="icon">🕒</span>Watch Later</div>
+</div>`:''} <div class="sidebar-section"> <div class="sidebar-label">Explore</div> ${CATEGORIES.slice(1).map(c=>`<div class="sidebar-item" onclick="navigateTo('home',{selectedCategory:'${c}'})"><span class="icon">${catIcon(c)}</span>${c}</div>`).join(’’)}
+</div>
+
+  </nav>`;
+}
+function catIcon(c){const m={Music:'🎵',Gaming:'🎮',Education:'📚',Comedy:'😂',Sports:'⚽',Tech:'💻',News:'📰',Vlogs:'📹',Food:'🍕',Travel:'✈️',Shorts:'📱'};return m[c]||'🎬'}
+
+// ==================== HOME PAGE ====================
+function renderHomePage(){
+const vids=state.videos;
+const trending=vids.slice(0,6);
+const rest=state.selectedCategory===‘All’?vids.slice(6):vids;
+return`<div class="home-page"> <div class="category-tabs"> ${CATEGORIES.map(c=>`<button class="cat-tab ${state.selectedCategory===c?'active':''}" onclick="selectCategory('${c}')">${c}</button>`).join('')} </div> ${state.loading?`<div style="padding:60px;text-align:center"><div class="spinner"></div></div>`:''} ${!state.loading&&vids.length===0?`<div class="empty-state"><span class="icon">🎬</span><h3>No videos yet</h3><p>Be the first to upload a video on IndiaTube!</p>${state.user?`<br><button class="btn-primary" onclick="openUploadModal()">Upload Video</button>`:’’}</div>`:''} ${!state.loading&&state.selectedCategory==='All'&&trending.length>0?`<div class="section-title"><span class="icon">🔥</span>Trending</div><div class="videos-grid">${trending.map((v,i)=>videoCardHTML(v,i<3)).join(’’)}</div>`:''} ${!state.loading&&rest.length>0?`<div class="section-title"><span class="icon">${state.selectedCategory===‘All’?‘🎬’:‘🔍’}</span>${state.selectedCategory===‘All’?‘Recommended’:‘Category: ‘+state.selectedCategory}</div><div class="videos-grid">${rest.map(v=>videoCardHTML(v)).join(’’)}</div>`:’’}
+
+  </div>`;
+}
+
+// ==================== WATCH PAGE ====================
+function renderWatchPage(){
+const v=state.currentVideo;
+if(!v)return`<div class="empty-state"><span class="icon">😕</span><h3>Video not found</h3></div>`;
+const likes=v.likes||[];
+const dislikes=v.dislikes||[];
+const uid=state.user?.uid;
+const liked=uid&&likes.includes(uid);
+const disliked=uid&&dislikes.includes(uid);
+const isSubbed=state.subscriptions.includes(v.uploaderId);
+const recs=state.videos.filter(r=>r.id!==v.id).slice(0,12);
+return`<div class="watch-page"> <div class="player-section"> <div class="video-player-wrap" id="player-wrap"> <video id="main-video" src="${v.videoUrl}" preload="metadata" ontimeupdate="updateProgress()" onended="videoEnded()" onclick="togglePlay()"></video> <div class="custom-controls" id="video-controls"> <div class="progress-bar" id="progress-bar" onclick="seekVideo(event)"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div> <div class="controls-row"> <button class="ctrl-btn" onclick="togglePlay()" id="play-btn">▶</button> <button class="ctrl-btn" onclick="skipBack()">⏮</button> <button class="ctrl-btn" onclick="skipFwd()">⏭</button> <input type="range" class="vol-slider" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)" title="Volume"> <span class="time-display" id="time-display">0:00 / ${v.duration||'0:00'}</span> <span class="ctrl-spacer"></span> <button class="ctrl-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button> </div> </div> </div> <div class="video-info-section"> <div class="video-page-title">${v.title}</div> <div class="video-actions-row"> <div class="action-btn ${liked?'active':''}" onclick="likeVideo('${v.id}')">👍 ${likes.length}</div> <div class="action-btn ${disliked?'active':''}" onclick="dislikeVideo('${v.id}')">👎 ${dislikes.length}</div> <div class="action-btn" onclick="addToWatchLater('${v.id}')">🕒 Save</div> <div class="action-btn" onclick="shareVideo('${v.id}')">📤 Share</div> <div class="action-btn" onclick="downloadVideo('${v.videoUrl}','${v.title}')">⬇️ Download</div> </div> <div class="channel-row"> <div onclick="viewChannel('${v.uploaderId}')" style="cursor:pointer">${avatarEl(v.channelAvatar,v.channelName,44)}</div> <div class="ch-info"> <div class="ch-name-link" onclick="viewChannel('${v.uploaderId}')">${v.channelName||'Unknown Channel'}</div> <div class="ch-subs">${formatViews(v.views)} • ${timeAgo(v.createdAt)}</div> </div> ${state.user&&state.user.uid!==v.uploaderId?`<button class="sub-btn ${isSubbed?'subscribed':''}" onclick="toggleSubscribe('${v.uploaderId}')">${isSubbed?‘✓ Subscribed’:‘Subscribe’}</button>`:''} </div> <div class="video-desc" id="video-desc" onclick="toggleDesc()">${v.description||'No description.'}<br><small style="color:var(--text3)">${(v.tags||[]).map(t=>`#${t}`).join(' ')}</small></div> <div class="comments-section"> <div class="comments-header">💬 ${state.comments.length} Comments</div> ${state.user?`<div class="comment-input-row">
+${avatarEl(state.userProfile?.photoURL,state.userProfile?.displayName)}
+<div style="flex:1"><textarea id="comment-box" placeholder="Add a comment..." rows="2"></textarea><br><button class="btn-primary" style="margin-top:8px" onclick="submitComment('${v.id}')">Comment</button></div>
+</div>`:`<div style="color:var(--text3);font-size:0.88rem;margin-bottom:14px"><button class="btn-primary" onclick="openAuthModal()">Sign in</button> to comment</div>`} <div id="comments-list">${renderComments()}</div> </div> </div> </div> <div class="recommendations" id="recs-sidebar"> <div class="section-title" style="font-size:1rem;margin-bottom:10px"><span class="icon">🎬</span>Up next</div> ${recs.map(r=>`<div class="rec-card" onclick="playVideo('${r.id}')">
+<div class="rec-thumb">${r.thumbnailUrl?`<img src="${r.thumbnailUrl}" loading="lazy" alt="${r.title}">`:`<div style="width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center">🎬</div>`}</div>
+<div class="rec-info">
+<div class="rec-title">${r.title}</div>
+<div class="rec-ch">${r.channelName}</div>
+<div class="rec-stats">${formatViews(r.views)} • ${timeAgo(r.createdAt)}</div>
+</div>
+</div>`).join(’’)}
+</div>
+
+  </div>`;
+}
+function renderComments(){
+  return state.comments.map(c=>`<div class="comment-item">
+    ${avatarEl(c.authorAvatar,c.authorName,34)}
+    <div class="comment-body">
+      <div class="comment-author">${c.authorName}</div>
+      <div class="comment-text">${c.text}</div>
+      <div class="comment-meta">
+        <span>${timeAgo(c.createdAt)}</span>
+        <span class="comment-like-btn">👍 ${(c.likes||[]).length}</span>
+      </div>
+    </div>
+  </div>`).join('')||`<div style="color:var(--text3);font-size:0.88rem">No comments yet. Be the first!</div>`;
+}
+
+// ==================== SHORTS PAGE ====================
+function renderShortsPage(){
+const s=state.shorts;
+if(s.length===0)return`<div class="shorts-page" style="align-items:center;justify-content:center"><div class="empty-state"><span class="icon">📱</span><h3>No Shorts yet</h3><p>Upload vertical videos to appear here!</p></div></div>`;
+const idx=state.shortsIndex;
+const cur=s[idx];
+if(!cur)return’’;
+const uid=state.user?.uid;
+const liked=uid&&(cur.likes||[]).includes(uid);
+return`<div class="shorts-page"> <div class="shorts-container" id="shorts-container" ontouchstart="shortsTouchStart(event)" ontouchend="shortsTouchEnd(event)"> ${s.map((sh,i)=>`<div class="short-item" id="short-item-${i}" style="transform:translateY(${(i-idx)*100}%)">
+<div class="short-video-wrap">
+<video id=“short-video-${i}” src=”${sh.videoUrl}” ${i===idx?‘autoplay’:’’}  loop playsinline preload=”${i===idx?‘auto’:‘metadata’}” onclick=“toggleShortPlay(${i})”></video>
+<div class="short-overlay">
+<div class="short-title">${sh.title}</div>
+<div class="short-channel">${sh.channelName}</div>
+</div>
+</div>
+<div class="shorts-actions">
+<div class="short-action-btn" onclick="likeVideo('${sh.id}')">
+<div class="icon ${i===idx&&liked?'liked':''}">👍</div>
+<span>${(sh.likes||[]).length}</span>
+</div>
+<div class="short-action-btn" onclick="openCommentModal('${sh.id}')">
+<div class="icon">💬</div>
+<span>${sh.commentCount||0}</span>
+</div>
+<div class="short-action-btn" onclick="shareVideo('${sh.id}')">
+<div class="icon">📤</div>
+<span>Share</span>
+</div>
+<div class="short-action-btn" onclick="viewChannel('${sh.uploaderId}')">
+${avatarEl(sh.channelAvatar,sh.channelName,44)}
+<span>Channel</span>
+</div>
+</div>
+</div>`).join(’’)}
+</div>
+<div class="shorts-nav">
+<button class=“shorts-nav-btn” onclick=“prevShort()” ${idx===0?‘disabled’:’’}>▲</button>
+<button class=“shorts-nav-btn” onclick=“nextShort()” ${idx>=s.length-1?‘disabled’:’’}>▼</button>
+</div>
+
+  </div>`;
+}
+
+// ==================== SEARCH PAGE ====================
+function renderSearchPage(){
+const r=state.searchResults;
+return`<div class="search-page"> <div class="section-title"><span class="icon">🔍</span>Results for "${state.searchQuery}"</div> ${state.loading?`<div class="spinner"></div>`:''} ${!state.loading&&r.length===0?`<div class="empty-state"><span class="icon">😕</span><h3>No results found</h3><p>Try different keywords or explore categories.</p></div>`:''} ${r.map(v=>`<div class="search-result-item" onclick="playVideo('${v.id}')">
+<div class="search-result-thumb">${v.thumbnailUrl?`<img src="${v.thumbnailUrl}" loading="lazy" alt="${v.title}">`:`<div style="width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>`}</div>
+<div class="search-result-info">
+<div class="search-result-title">${v.title}</div>
+<div class="search-result-meta">${v.channelName} • ${formatViews(v.views)} • ${timeAgo(v.createdAt)}</div>
+<div class="search-result-desc">${v.description||’’}</div>
+</div>
+</div>`).join(’’)}
+
+  </div>`;
+}
+
+// ==================== CHANNEL PAGE ====================
+function renderChannelPage(){
+const ch=state.channelData;
+if(!ch)return`<div class="empty-state"><span class="icon">😕</span><h3>Channel not found</h3></div>`;
+const isOwn=state.user?.uid===ch.uid;
+const isSubbed=state.subscriptions.includes(ch.uid);
+const vids=state.videos.filter(v=>v.uploaderId===ch.uid);
+return`<div class="channel-page"> <div class="channel-banner"></div> <div class="channel-header"> <div class="channel-info-row"> <div class="channel-avatar-big">${ch.photoURL?`<img src="${ch.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span>${initials(ch.channelName||ch.displayName)}</span>`}</div> <div class="channel-details"> <div class="channel-name-big">${ch.channelName||ch.displayName||'Unknown'}</div> <div class="channel-handle">@${(ch.displayName||'user').toLowerCase().replace(/\s/g,'')}</div> <div class="channel-handle">${ch.subscriberCount||0} subscribers</div> <div class="channel-bio">${ch.bio||''}</div> </div> ${!isOwn&&state.user?`<button class="sub-btn ${isSubbed?'subscribed':''}" onclick="toggleSubscribe('${ch.uid}')">${isSubbed?‘✓ Subscribed’:‘Subscribe’}</button>`:''} ${isOwn?`<button class="btn-primary" onclick="openUploadModal()">+ Upload</button>`:''} </div> </div> <div class="channel-tabs"> <div class="channel-tab active">Videos (${vids.length})</div> </div> <div class="channel-content"> ${vids.length===0?`<div class="empty-state"><span class="icon">📺</span><h3>No videos yet</h3></div>`:`<div class="videos-grid">${vids.map(v=>videoCardHTML(v)).join(’’)}</div>`}
+</div>
+
+  </div>`;
+}
+
+// ==================== HISTORY PAGE ====================
+function renderHistoryPage(){
+const hist=state.watchHistory;
+const vids=state.videos.filter(v=>hist.includes(v.id));
+return`<div class="home-page"> <div class="section-title"><span class="icon">🕐</span>Watch History</div> ${vids.length===0?`<div class="empty-state"><span class="icon">🕐</span><h3>No history yet</h3><p>Videos you watch will appear here.</p></div>`:`<div class="videos-grid">${vids.map(v=>videoCardHTML(v)).join(’’)}</div>`} ${vids.length>0?`<br><button class="action-btn" onclick="clearHistory()">🗑️ Clear History</button>`:’’}
+
+  </div>`;
+}
+async function clearHistory(){
+  state.watchHistory=[];
+  if(state.user)await updateDoc(doc(db,'users',state.user.uid),{watchHistory:[]});
+  navigateTo('history');
+}
+
+// ==================== WATCH LATER PAGE ====================
+function renderWatchLaterPage(){
+const vids=state.videos.filter(v=>state.watchLater.includes(v.id));
+return`<div class="home-page"> <div class="section-title"><span class="icon">🕒</span>Watch Later</div> ${vids.length===0?`<div class="empty-state"><span class="icon">🕒</span><h3>Nothing saved</h3><p>Save videos to watch later!</p></div>`:`<div class="videos-grid">${vids.map(v=>videoCardHTML(v)).join(’’)}</div>`}
+
+  </div>`;
+}
+
+// ==================== SUBSCRIPTIONS PAGE ====================
+function renderSubscriptionsPage(){
+const vids=state.videos.filter(v=>state.subscriptions.includes(v.uploaderId));
+return`<div class="home-page"> <div class="section-title"><span class="icon">🔔</span>Subscriptions</div> ${vids.length===0?`<div class="empty-state"><span class="icon">🔔</span><h3>No subscriptions</h3><p>Subscribe to channels to see their videos here.</p></div>`:`<div class="videos-grid">${vids.map(v=>videoCardHTML(v)).join(’’)}</div>`}
+
+  </div>`;
+}
+
+// ==================== PROFILE PAGE ====================
+function renderProfilePage(){
+const u=state.userProfile;
+if(!u)return`<div class="empty-state"><span class="icon">👤</span><h3>Not signed in</h3></div>`;
+return`<div class="profile-page"> <div class="section-title" style="justify-content:center"><span class="icon">👤</span>Your Profile</div> <div style="text-align:center;margin-bottom:24px"> <div class="profile-avatar-big" onclick="updateAvatar()">${u.photoURL?`<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span>${initials(u.displayName)}</span>`}</div>
+<div style="font-size:0.8rem;color:var(--text3)">Click to change avatar</div>
+</div>
+<div class="form-group">
+<label class="form-label">Channel Name</label>
+<input class="form-input" id="prof-ch-name" value="${u.channelName||u.displayName||''}" placeholder="Your channel name">
+</div>
+<div class="form-group">
+<label class="form-label">Display Name</label>
+<input class="form-input" id="prof-disp-name" value="${u.displayName||''}" placeholder="Your name">
+</div>
+<div class="form-group">
+<label class="form-label">Bio</label>
+<textarea class="form-input" id="prof-bio" rows="3" placeholder="Tell the world about yourself...">${u.bio||’’}</textarea>
+</div>
+<button class="btn-primary" style="width:100%;padding:12px" onclick="saveProfile()">Save Changes</button>
+<br><br>
+<div style="text-align:center">
+<button class="action-btn" onclick="viewChannel('${u.uid}')">👁️ View Channel</button>
+<button class="action-btn" style="margin-left:8px;color:#e74c3c;border-color:#e74c3c" onclick="logoutUser()">Sign Out</button>
+</div>
+
+  </div>`;
+}
+async function saveProfile(){
+  const name=document.getElementById('prof-disp-name')?.value;
+  const channelName=document.getElementById('prof-ch-name')?.value;
+  const bio=document.getElementById('prof-bio')?.value;
+  if(!name.trim()){showToast('Name is required','error');return;}
+  try{
+    await updateDoc(doc(db,'users',state.user.uid),{displayName:name.trim(),channelName:channelName.trim(),bio:bio.trim()});
+    await updateProfile(state.user,{displayName:name.trim()});
+    state.userProfile={...state.userProfile,displayName:name.trim(),channelName:channelName.trim(),bio:bio.trim()};
+    showToast('Profile saved ✅','success');
+    renderApp();
+  }catch(e){showToast(e.message,'error')}
+}
+async function updateAvatar(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='image/*';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];if(!file)return;
+    showToast('Uploading avatar...','info');
+    const aRef=ref(storage,`avatars/${state.user.uid}/${Date.now()}`);
+    await uploadBytesResumable(aRef,file);
+    const url=await getDownloadURL(aRef);
+    await updateDoc(doc(db,'users',state.user.uid),{photoURL:url});
+    await updateProfile(state.user,{photoURL:url});
+    state.userProfile={...state.userProfile,photoURL:url};
+    showToast('Avatar updated ✅','success');
+    renderApp();
+  };
+  input.click();
+}
+
+// ==================== UPLOAD MODAL ====================
+function renderUploadModal(){
+return`<div class="upload-modal" id="upload-modal" style="display:none" onclick="if(event.target.id==='upload-modal')closeUploadModal()"> <div class="upload-dialog" style="position:relative"> <button class="btn-close" onclick="closeUploadModal()">✕</button> <h2>📤 Upload Video</h2> <div class="upload-drop-zone" id="video-drop" onclick="document.getElementById('vid-file-input').click()"> <input type="file" id="vid-file-input" accept="video/*" style="display:none" onchange="videoFileSelected(this)"> <span class="drop-icon">🎬</span> <p id="vid-drop-text">Click or drag & drop your video here</p> </div> <div id="upload-prog-wrap" style="display:none;margin-top:8px"> <div class="progress-wrap"><div class="progress-fill-bar" id="upload-prog-bar" style="width:0%"></div></div> </div> <div class="form-group" style="margin-top:16px"> <label class="form-label">Title *</label> <input class="form-input" id="up-title" placeholder="Video title"> </div> <div class="form-group"> <label class="form-label">Description</label> <textarea class="form-input" id="up-desc" rows="3" placeholder="What is this video about?"></textarea> </div> <div class="form-group"> <label class="form-label">Category</label> <select class="form-input" id="up-cat">${CATEGORIES.slice(1).map(c=>`<option value="${c}">${c}</option>`).join(’’)}</select>
+</div>
+<div class="form-group">
+<label class="form-label">Tags (comma separated)</label>
+<input class="form-input" id="up-tags" placeholder="music, dance, india">
+</div>
+<div class="form-group">
+<label class="form-label">Thumbnail (optional)</label>
+<div class="upload-drop-zone" onclick="document.getElementById('thumb-input').click()">
+<input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="thumbSelected(this)">
+<span class="drop-icon">🖼️</span>
+<p id="thumb-drop-text">Click to select thumbnail</p>
+</div>
+<img id="thumb-preview" class="thumb-preview" style="display:none">
+</div>
+<div class="form-group">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem">
+<input type="checkbox" id="up-short" style="width:16px;height:16px;accent-color:var(--saffron)">
+<span>This is a Short (vertical video)</span>
+</label>
+</div>
+<button class="btn-primary" style="width:100%;padding:13px;font-size:1rem" onclick="submitUpload()">Upload Video 🚀</button>
+</div>
+
+  </div>`;
+}
+
+// ==================== AUTH MODAL ====================
+function renderAuthModal(){
+return`<div class="auth-modal" id="auth-modal" style="display:none" onclick="if(event.target.id==='auth-modal')closeAuthModal()">
+<div class="auth-dialog">
+<button class="btn-close" onclick="closeAuthModal()">✕</button>
+<div class="auth-logo"><div class="logo-big">▶ IndiaTube</div></div>
+<h2 id="auth-title">Welcome Back</h2>
+<p class="subtitle">Sign in to upload, comment & subscribe</p>
+<div class="auth-tabs">
+<div class="auth-tab active" id="login-tab" onclick="switchAuthTab('login')">Sign In</div>
+<div class="auth-tab" id="signup-tab" onclick="switchAuthTab('signup')">Sign Up</div>
+</div>
+<button class="social-btn" onclick="loginWithGoogle()">
+<span style="font-size:1.2rem">G</span> Continue with Google
+</button>
+<div class="or-divider">or</div>
+<div id="signup-name-wrap" style="display:none">
+<div class="form-group">
+<input class="form-input" id="auth-name" placeholder="Your name">
+</div>
+</div>
+<div class="form-group">
+<input class="form-input" id="auth-email" type="email" placeholder="Email address">
+</div>
+<div class="form-group">
+<input class="form-input" id="auth-pass" type="password" placeholder="Password">
+</div>
+<button class="btn-primary" style="width:100%;padding:12px;font-size:0.95rem" id="auth-submit-btn" onclick="submitAuth()">Sign In</button>
+<div class="auth-switch" id="auth-switch-text">Don’t have an account? <span onclick="switchAuthTab('signup')">Sign Up</span></div>
+</div>
+
+  </div>`;
+}
+
+// ==================== NOTIFICATIONS PANEL ====================
+function renderNotifPanel(){
+return`<div class="notif-panel" id="notif-panel"> <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"> <div style="font-family:'Baloo 2',cursive;font-weight:700;font-size:1.1rem">🔔 Notifications</div> <button onclick="markAllRead()" style="font-size:0.8rem;color:var(--saffron)">Mark all read</button> </div> ${state.notifications.length===0?`<div class="empty-state"><span class="icon">🔔</span><h3>No notifications</h3></div>`:''} ${state.notifications.map(n=>`<div class="notif-item ${n.read?'':'unread'}" onclick="notifClick('${n.id}','${n.videoId||''}')">
+<span style="font-size:1.2rem">🔔</span>
+<div class="notif-text">${n.text}<div class="notif-time">${timeAgo(n.createdAt)}</div></div>
+</div>`).join(’’)}
+
+  </div>`;
+}
+
+// ==================== USER DROPDOWN ====================
+function renderUserDropdown(){
+if(!state.user||state.activeDropdown!==‘user’)return’’;
+return`<div class="dropdown-menu" id="user-dropdown" style="position:fixed;top:60px;right:16px">
+<div class="dropdown-item" onclick="navigateTo('profile');closeDropdown()">👤 Your Profile</div>
+<div class="dropdown-item" onclick="viewChannel('${state.user.uid}');closeDropdown()">📺 Your Channel</div>
+<div class="dropdown-item" onclick="openUploadModal();closeDropdown()">📤 Upload Video</div>
+<div class="dropdown-divider"></div>
+<div class="dropdown-item" onclick="navigateTo('history');closeDropdown()">🕐 History</div>
+<div class="dropdown-item" onclick="navigateTo('watch-later');closeDropdown()">🕒 Watch Later</div>
+<div class="dropdown-divider"></div>
+<div class="dropdown-item" onclick="toggleDarkMode();closeDropdown()">${state.darkMode?‘☀️ Light Mode’:‘🌙 Dark Mode’}</div>
+<div class="dropdown-divider"></div>
+<div class="dropdown-item" style="color:#e74c3c" onclick="logoutUser();closeDropdown()">🚪 Sign Out</div>
+
+  </div>`;
+}
+
+// ==================== INTERACTIONS ====================
+function afterRender(){
+// Video player events
+const vid=document.getElementById(‘main-video’);
+if(vid){
+vid.onplay=()=>{const b=document.getElementById(‘play-btn’);if(b)b.textContent=‘⏸’};
+vid.onpause=()=>{const b=document.getElementById(‘play-btn’);if(b)b.textContent=‘▶’};
+// Show controls on hover (already handled by CSS)
+const wrap=document.getElementById(‘player-wrap’);
+if(wrap){
+wrap.addEventListener(‘mousemove’,()=>{
+const ctrl=document.getElementById(‘video-controls’);
+if(ctrl){ctrl.style.opacity=‘1’;clearTimeout(wrap._hideTimer);wrap._hideTimer=setTimeout(()=>ctrl.style.opacity=’’,2500)}
+});
+}
+}
+// Sidebar active state
+const items=document.querySelectorAll(’.sidebar-item’);
+items.forEach(item=>{item.style.cursor=‘pointer’});
+// Keyboard shortcuts
+document.onkeydown=(e)=>{
+if(e.target.tagName===‘INPUT’||e.target.tagName===‘TEXTAREA’)return;
+const vid=document.getElementById(‘main-video’);
+if(!vid)return;
+if(e.code===‘Space’){e.preventDefault();togglePlay()}
+if(e.code===‘ArrowRight’)vid.currentTime=Math.min(vid.duration,vid.currentTime+5);
+if(e.code===‘ArrowLeft’)vid.currentTime=Math.max(0,vid.currentTime-5);
+if(e.code===‘ArrowUp’){e.preventDefault();vid.volume=Math.min(1,vid.volume+0.1)}
+if(e.code===‘ArrowDown’){e.preventDefault();vid.volume=Math.max(0,vid.volume-0.1)}
+if(e.code===‘KeyF’)toggleFullscreen();
+};
+// Close dropdown on outside click
+document.onclick=(e)=>{
+if(!e.target.closest(’#user-dropdown-wrap’)&&!e.target.closest(’#user-dropdown’))closeDropdown();
+};
+}
+
+// VIDEO PLAYER CONTROLS
+function togglePlay(){const v=document.getElementById(‘main-video’);if(!v)return;v.paused?v.play():v.pause()}
+function skipBack(){const v=document.getElementById(‘main-video’);if(v)v.currentTime=Math.max(0,v.currentTime-10)}
+function skipFwd(){const v=document.getElementById(‘main-video’);if(v)v.currentTime=Math.min(v.duration,v.currentTime+10)}
+function setVolume(val){const v=document.getElementById(‘main-video’);if(v)v.volume=val}
+function updateProgress(){
+const v=document.getElementById(‘main-video’);
+const fill=document.getElementById(‘progress-fill’);
+const time=document.getElementById(‘time-display’);
+if(!v||!fill)return;
+const pct=v.duration?(v.currentTime/v.duration)*100:0;
+fill.style.width=pct+’%’;
+if(time)time.textContent=formatTime(v.currentTime)+’ / ’+formatTime(v.duration);
+}
+function seekVideo(e){
+const v=document.getElementById(‘main-video’);
+const bar=document.getElementById(‘progress-bar’);
+if(!v||!bar||!v.duration)return;
+const rect=bar.getBoundingClientRect();
+const pct=(e.clientX-rect.left)/rect.width;
+v.currentTime=pct*v.duration;
+}
+function toggleFullscreen(){
+const wrap=document.getElementById(‘player-wrap’);
+if(!wrap)return;
+if(!document.fullscreenElement)wrap.requestFullscreen().catch(()=>{});
+else document.exitFullscreen().catch(()=>{});
+}
+function videoEnded(){
+const recs=state.videos.filter(r=>r.id!==state.currentVideo?.id);
+if(recs.length>0)playVideo(recs[0].id);
+}
+
+// SHORTS CONTROLS
+let _touchY=0;
+function shortsTouchStart(e){_touchY=e.touches[0].clientY}
+function shortsTouchEnd(e){const dy=_touchY-e.changedTouches[0].clientY;if(dy>50)nextShort();else if(dy<-50)prevShort()}
+function nextShort(){
+const vids=document.querySelectorAll(’[id^=“short-video-”]’);
+vids.forEach(v=>v.pause());
+if(state.shortsIndex<state.shorts.length-1){
+state.shortsIndex++;
+const nv=document.getElementById(`short-video-${state.shortsIndex}`);
+if(nv){nv.play().catch(()=>{});}
+updateShortsUI();
+}
+}
+function prevShort(){
+const vids=document.querySelectorAll(’[id^=“short-video-”]’);
+vids.forEach(v=>v.pause());
+if(state.shortsIndex>0){
+state.shortsIndex–;
+const nv=document.getElementById(`short-video-${state.shortsIndex}`);
+if(nv){nv.play().catch(()=>{});}
+updateShortsUI();
+}
+}
+function updateShortsUI(){
+const idx=state.shortsIndex;
+document.querySelectorAll(’[id^=“short-item-”]’).forEach((el,i)=>{el.style.transform=`translateY(${(i-idx)*100}%)`;});
+const upBtn=document.querySelector(’.shorts-nav-btn:first-child’);
+const dnBtn=document.querySelector(’.shorts-nav-btn:last-child’);
+if(upBtn)upBtn.disabled=idx===0;
+if(dnBtn)dnBtn.disabled=idx>=state.shorts.length-1;
+}
+function toggleShortPlay(i){const v=document.getElementById(`short-video-${i}`);if(v)v.paused?v.play():v.pause()}
+
+// UI ACTIONS
+function toggleSidebar(){
+if(window.innerWidth<=768){
+const s=document.getElementById(‘sidebar’);
+const o=document.getElementById(‘sidebar-overlay’);
+if(s)s.classList.toggle(‘mobile-open’);
+if(o)o.classList.toggle(‘show’);
+}else{
+state.sidebarOpen=!state.sidebarOpen;
+const s=document.getElementById(‘sidebar’);
+const c=document.getElementById(‘main-content’);
+if(s)s.classList.toggle(‘collapsed’,!state.sidebarOpen);
+if(c)c.style.marginLeft=state.sidebarOpen?‘var(–sidebar-w)’:‘0’;
+}
+}
+function closeSidebar(){
+const s=document.getElementById(‘sidebar’);const o=document.getElementById(‘sidebar-overlay’);
+if(s)s.classList.remove(‘mobile-open’);if(o)o.classList.remove(‘show’);
+}
+function toggleDarkMode(){state.darkMode=!state.darkMode;document.body.classList.toggle(‘light-mode’,!state.darkMode);const btn=document.querySelector(’[onclick=“toggleDarkMode()”]’);if(btn)btn.textContent=state.darkMode?‘☀️’:‘🌙’;}
+function toggleNotif(){
+state.notifOpen=!state.notifOpen;
+const panel=document.getElementById(‘notif-panel’);
+if(panel)panel.classList.toggle(‘open’,state.notifOpen);
+if(state.notifOpen)fetchNotifications().then(n=>{state.notifications=n;renderNotifPanelContent()});
+}
+function renderNotifPanelContent(){
+const panel=document.getElementById(‘notif-panel’);
+if(panel)panel.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-family:'Baloo 2',cursive;font-weight:700;font-size:1.1rem">🔔 Notifications</div><button onclick="markAllRead()" style="font-size:0.8rem;color:var(--saffron)">Mark all read</button></div>${state.notifications.length===0?'<div class="empty-state"><span class="icon">🔔</span><h3>No notifications</h3></div>':''}${state.notifications.map(n=>`<div class="notif-item ${n.read?'':'unread'}" onclick="notifClick('${n.id}','${n.videoId||''}')"><span style="font-size:1.2rem">🔔</span><div class="notif-text">${n.text}<div class="notif-time">${timeAgo(n.createdAt)}</div></div></div>`).join('')}`;
+}
+async function markAllRead(){
+for(const n of state.notifications){
+if(!n.read)await updateDoc(doc(db,‘notifications’,n.id),{read:true});
+}
+state.notifications=state.notifications.map(n=>({…n,read:true}));
+renderNotifPanelContent();
+}
+function notifClick(id,videoId){if(videoId)playVideo(videoId);}
+function toggleDropdown(name){state.activeDropdown=state.activeDropdown===name?null:name;renderApp();}
+function closeDropdown(){if(state.activeDropdown){state.activeDropdown=null;const d=document.getElementById(‘user-dropdown’);if(d)d.remove();}}
+async function doSearch(q){
+if(!q.trim())return;
+state.searchQuery=q;state.loading=true;navigateTo(‘search’);
+state.searchResults=await searchVideos(q);state.loading=false;
+const c=document.getElementById(‘main-content’);if(c)c.innerHTML=renderSearchPage();
+}
+function updateSearchQuery(v){state.searchQuery=v}
+async function selectCategory(cat){
+state.selectedCategory=cat;state.loading=true;
+const c=document.getElementById(‘main-content’);if(c)c.innerHTML=renderHomePage();
+state.videos=await fetchVideos(cat);state.loading=false;
+if(c)c.innerHTML=renderHomePage();
+}
+function openUploadModal(){if(!state.user){openAuthModal();return;}const m=document.getElementById(‘upload-modal’);if(m)m.style.display=‘flex’;}
+function closeUploadModal(){const m=document.getElementById(‘upload-modal’);if(m){m.style.display=‘none’;const pb=document.getElementById(‘upload-prog-wrap’);if(pb)pb.style.display=‘none’;}}
+function openAuthModal(){const m=document.getElementById(‘auth-modal’);if(m)m.style.display=‘flex’;}
+function closeAuthModal(){const m=document.getElementById(‘auth-modal’);if(m)m.style.display=‘none’;}
+let _authMode=‘login’;
+function switchAuthTab(tab){
+_authMode=tab;
+document.getElementById(‘login-tab’)?.classList.toggle(‘active’,tab===‘login’);
+document.getElementById(‘signup-tab’)?.classList.toggle(‘active’,tab===‘signup’);
+document.getElementById(‘auth-title’).textContent=tab===‘login’?‘Welcome Back’:‘Create Account’;
+document.getElementById(‘signup-name-wrap’).style.display=tab===‘signup’?‘block’:‘none’;
+document.getElementById(‘auth-submit-btn’).textContent=tab===‘login’?‘Sign In’:‘Sign Up’;
+document.getElementById(‘auth-switch-text’).innerHTML=tab===‘login’?“Don’t have an account? <span onclick="switchAuthTab(‘signup’)">Sign Up</span>”:“Already have an account? <span onclick="switchAuthTab(‘login’)">Sign In</span>”;
+}
+async function submitAuth(){
+const email=document.getElementById(‘auth-email’)?.value;
+const pass=document.getElementById(‘auth-pass’)?.value;
+if(!email||!pass){showToast(‘Please fill all fields’,‘error’);return;}
+if(_authMode===‘signup’){
+const name=document.getElementById(‘auth-name’)?.value||‘New Creator’;
+await signUpUser(email,pass,name);
+}else{await loginUser(email,pass)}
+}
+function videoFileSelected(input){
+const file=input.files[0];if(!file)return;
+document.getElementById(‘vid-drop-text’).textContent=file.name;
+window._uploadVideoFile=file;
+}
+function thumbSelected(input){
+const file=input.files[0];if(!file)return;
+document.getElementById(‘thumb-drop-text’).textContent=file.name;
+window._uploadThumbFile=file;
+const prev=document.getElementById(‘thumb-preview’);
+if(prev){prev.src=URL.createObjectURL(file);prev.style.display=‘block’;}
+}
+async function submitUpload(){
+const videoFile=document.getElementById(‘vid-file-input’)?.files[0]||window._uploadVideoFile;
+const thumbnailFile=document.getElementById(‘thumb-input’)?.files[0]||window._uploadThumbFile;
+await uploadVideo({
+title:document.getElementById(‘up-title’)?.value||’’,
+description:document.getElementById(‘up-desc’)?.value||’’,
+category:document.getElementById(‘up-cat’)?.value||‘All’,
+tags:document.getElementById(‘up-tags’)?.value||’’,
+isShort:document.getElementById(‘up-short’)?.checked||false,
+videoFile,thumbnailFile
+});
+}
+async function submitComment(videoId){
+const box=document.getElementById(‘comment-box’);
+if(!box)return;
+const text=box.value.trim();
+if(!text)return;
+await addComment(videoId,text);
+box.value=’’;
+state.comments=await fetchComments(videoId);
+const list=document.getElementById(‘comments-list’);
+if(list)list.innerHTML=renderComments();
+showToast(‘Comment posted ✅’,‘success’);
+}
+async function viewChannel(uid){
+state.channelData=await fetchChannel(uid);
+const channelVids=await fetchChannelVideos(uid);
+state.videos=[…channelVids,…state.videos.filter(v=>!channelVids.some(cv=>cv.id===v.id))];
+navigateTo(‘channel’);
+}
+function shareVideo(id){
+const url=`${location.href.split('?')[0]}?v=${id}`;
+if(navigator.share){navigator.share({title:‘Check this video on IndiaTube’,url}).catch(()=>{})}
+else{navigator.clipboard?.writeText(url).then(()=>showToast(‘Link copied!’,‘success’)).catch(()=>{})}
+}
+function downloadVideo(url,title){
+const a=document.createElement(‘a’);a.href=url;a.download=(title||‘video’)+’.mp4’;a.target=’_blank’;a.click();
+}
+function toggleDesc(){
+const d=document.getElementById(‘video-desc’);if(!d)return;
+d.style.webkitLineClamp=d.style.webkitLineClamp?’’:’-webkit-fill-available’;
+}
+function openCommentModal(id){playVideo(id);}
+
+// ==================== INIT ====================
+async function init(){
+// Auth listener
+onAuthStateChanged(auth,async(user)=>{
+if(user){
+state.user=user;
+state.userProfile=await createOrUpdateUserProfile(user);
+state.subscriptions=state.userProfile?.subscriptions||[];
+state.watchHistory=state.userProfile?.watchHistory||[];
+state.watchLater=state.userProfile?.watchLater||[];
+state.notifications=await fetchNotifications();
+}else{
+state.user=null;state.userProfile=null;
+}
+if(!state.videos.length||state.page===‘home’){
+state.videos=await fetchVideos(state.selectedCategory);
+}
+renderApp();
+});
+// Initial load
+state.loading=true;
+state.videos=await fetchVideos(‘All’);
+state.shorts=await fetchShorts();
+state.loading=false;
+// Check URL param for direct video link
+const params=new URLSearchParams(location.search);
+if(params.get(‘v’))playVideo(params.get(‘v’));
+renderApp();
+}
+
+// Expose to global for onclick handlers
+Object.assign(window,{
+navigateTo,playVideo,togglePlay,skipBack,skipFwd,setVolume,updateProgress,seekVideo,toggleFullscreen,videoEnded,
+nextShort,prevShort,toggleShortPlay,shortsTouchStart,shortsTouchEnd,
+toggleSidebar,closeSidebar,toggleDarkMode,toggleNotif,markAllRead,notifClick,toggleDropdown,closeDropdown,
+doSearch,updateSearchQuery,selectCategory,
+openUploadModal,closeUploadModal,openAuthModal,closeAuthModal,switchAuthTab,submitAuth,loginWithGoogle,logoutUser,
+videoFileSelected,thumbSelected,submitUpload,
+submitComment,likeVideo,dislikeVideo,toggleSubscribe,addToWatchLater,shareVideo,downloadVideo,
+viewChannel,toggleDesc,openCommentModal,saveProfile,updateAvatar,clearHistory
+});
+
+init();
+</script>
+
+<div id="app"><div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px"><div style="font-family:'Baloo 2',cursive;font-size:2rem;font-weight:800;color:#FF6B00">▶ IndiaTube</div><div class="spinner"></div></div></div>
+</body>
+</html>
