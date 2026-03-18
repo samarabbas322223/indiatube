@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momo Magic • Fresh Dumplings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe4cc 100%);
+            color: #2c1810;
+        }
+
+        /* Header with navigation */
+        .header {
+            background: #c43e2c;
+            background: linear-gradient(135deg, #c43e2c, #a83222);
+            padding: 20px 5%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-text {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff9e6;
+            text-shadow: 3px 3px 0 #882e1e;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 50px;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #ff6b4a;
+            transform: translateY(-2px);
+        }
+
+        .order-btn {
+            background: #ffd966;
+            color: #882e1e !important;
+            box-shadow: 0 4px 0 #b45f2e;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 50px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 50px;
+        }
+
+        .hero-content {
+            flex: 1;
+        }
+
+        .hero-content h1 {
+            font-size: 64px;
+            font-weight: 800;
+            color: #882e1e;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 0 #ffb08e;
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            color: #5c3a2e;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-primary {
+            background: #c43e2c;
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #882e1e;
+            transition: 0.1s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:active {
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 #882e1e;
+        }
+
+        .btn-secondary {
+            background: #ffd966;
+            color: #882e1e;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #b45f2e;
+            transition: 0.1s;
+        }
+
+        .hero-image {
+            flex: 1;
+            position: relative;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.2);
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+
+        .hero-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .steam {
+            position: absolute;
+            top: 20%;
+            right: 30%;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            filter: blur(20px);
+            animation: steam 4s infinite;
+        }
+
+        @keyframes steam {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.5); }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 5%;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            color: #882e1e;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .section-title:after {
+            content: '🥟';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 40px 30px;
+            background: #fff9f0;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(200, 62, 44, 0.1);
+            transition: 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 40px rgba(200, 62, 44, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 28px;
+            color: #c43e2c;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Menu Section */
+        .menu {
+            padding: 80px 5%;
+            background: linear-gradient(135deg, #fff5e6, #ffe8d4);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 40px auto 0;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            transform: scale(1.03);
+            box-shadow: 0 20px 40px rgba(200, 62, 44, 0.2);
+        }
+
+        .menu-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #c43e2c;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 2;
+        }
+
+        .menu-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+
+        .menu-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .menu-info {
+            padding: 25px;
+        }
+
+        .menu-info h3 {
+            font-size: 24px;
+            color: #882e1e;
+            margin-bottom: 10px;
+        }
+
+        .menu-info p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .price {
+            font-size: 28px;
+            font-weight: 800;
+            color: #c43e2c;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .add-to-cart {
+            background: #ffd966;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-left: auto;
+            font-size: 16px;
+        }
+
+        .add-to-cart:hover {
+            background: #fec544;
+            transform: scale(1.05);
+        }
+
+        /* Special Offer */
+        .offer {
+            background: linear-gradient(135deg, #c43e2c, #a83222);
+            padding: 60px 5%;
+            text-align: center;
+            color: white;
+        }
+
+        .offer h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .offer p {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .offer-price {
+            font-size: 72px;
+            font-weight: 800;
+            color: #ffd966;
+            text-shadow: 4px 4px 0 #882e1e;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 80px 5%;
+            background: white;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 40px auto 0;
+        }
+
+        .testimonial-card {
+            background: #fff9f0;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .testimonial-card:before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 120px;
+            color: #ffd966;
+            opacity: 0.3;
+            font-family: serif;
+        }
+
+        .testimonial-text {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #555;
+            position: relative;
+            z-index: 2;
+        }
+
+        .customer {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .customer-img {
+            width: 60px;
+            height: 60px;
+            background: #c43e2c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+        }
+
+        .customer-info h4 {
+            font-size: 20px;
+            color: #882e1e;
+        }
+
+        .rating {
+            color: #ffb83b;
+            font-size: 20px;
+        }
+
+        /* Gallery Section */
+        .gallery {
+            padding: 80px 5%;
+            background: #fff5e6;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 40px auto 0;
+        }
+
+        .gallery-item {
+            border-radius: 20px;
+            overflow: hidden;
+            height: 250px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .footer {
+            background: #2c1810;
+            color: white;
+            padding: 60px 5% 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-section h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffd966;
+        }
+
+        .footer-section p {
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 28px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .social-links a:hover {
+            color: #ffd966;
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #5c3a2e;
+            color: #aaa;
+        }
+
+        /* Cart Sidebar */
+        .cart-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 380px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            transition: 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .cart-sidebar.open {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ffd966;
+        }
+
+        .cart-header h2 {
+            color: #882e1e;
+            font-size: 28px;
+        }
+
+        .close-cart {
+            font-size: 40px;
+            cursor: pointer;
+            color: #c43e2c;
+            font-weight: bold;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff5e6;
+            border-radius: 15px;
+        }
+
+        .cart-item-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .cart-item-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cart-item-details h4 {
+            color: #882e1e;
+            margin-bottom: 5px;
+        }
+
+        .cart-total {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ffd966;
+            font-size: 24px;
+            font-weight: 800;
+            color: #882e1e;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 18px;
+            background: #c43e2c;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #882e1e;
+        }
+
+        .cart-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #c43e2c;
+            color: white;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(200,62,44,0.3);
+            z-index: 99;
+            border: 3px solid #ffd966;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ffd966;
+            color: #882e1e;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            border: 2px solid #c43e2c;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+            }
+            
+            .hero-content h1 {
+                font-size: 48px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="header">
+        <div class="nav">
+            <div class="logo">
+                <div style="font-size: 50px;">🥟</div>
+                <div class="logo-text">MOMO MAGIC</div>
+            </div>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Menu</a>
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#" class="order-btn">Order Now</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section with Real Image -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Fresh & Delicious <br>Steamed Momos</h1>
+            <p>Experience the authentic taste of Himalayan dumplings!<br> Made fresh daily with love and secret spices.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">🍽️ Order Now</button>
+                <button class="btn-secondary">📋 See Menu</button>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Delicious Steamed Momos">
+            <div class="steam"></div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+        <h2 class="section-title">Why Choose Us</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🌱</div>
+                <h3>Fresh Ingredients</h3>
+                <p>We use only the freshest vegetables and meats, sourced daily from local markets</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔪</div>
+                <h3>Handmade Daily</h3>
+                <p>Each momo is carefully handcrafted by our expert chefs every morning</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌶️</div>
+                <h3>Secret Spices</h3>
+                <p>Our special Himalayan spice blend makes every bite unforgettable</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚚</div>
+                <h3>Free Delivery</h3>
+                <p>Free home delivery within 5km on orders above ₹299</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Section with Real Images -->
+    <div class="menu">
+        <h2 class="section-title">Our Popular Momos</h2>
+        <div class="menu-grid">
+            <!-- Item 1 - Steamed Momos -->
+            <div class="menu-item">
+                <div class="menu-badge">BESTSELLER</div>
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Steamed Momos">
+                <div class="menu-info">
+                    <h3>Steamed Momos</h3>
+                    <p>Classic steamed dumplings with spicy tomato chutney</p>
+                    <div class="price">
+                        ₹149
+                        <button class="add-to-cart" onclick="addToCart('Steamed Momos', 149, 'https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')">Add +</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Item 2 - Fried Momos -->
+            <div class="menu-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Fried Momos">
+                <div class="menu-info">
+                    <h3>Fried Momos</h3>
+                    <p>Crispy fried dumplings with garlic mayo</p>
+                    <div class="price">
+                        ₹179
+                        <button class="add-to-cart" onclick="addToCart('Fried Momos', 179, 'https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')">Add +</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Item 3 - Spicy Momos -->
+            <div class="menu-item">
+                <div class="menu-badge">SPICY</div>
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Spicy Momos">
+                <div class="menu-info">
+                    <h3>Spicy Momos</h3>
+                    <p>Red spicy momos with schezwan sauce</p>
+                    <div class="price">
+                        ₹199
+                        <button class="add-to-cart" onclick="addToCart('Spicy Momos', 199, 'https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')">Add +</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Item 4 - Paneer Momos -->
+            <div class="menu-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Paneer Momos">
+                <div class="menu-info">
+                    <h3>Paneer Momos</h3>
+                    <p>Cottage cheese filled dumplings</p>
+                    <div class="price">
+                        ₹189
+                        <button class="add-to-cart" onclick="addToCart('Paneer Momos', 189, 'https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')">Add +</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Item 5 - Chicken Momos -->
+            <div class="menu-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Chicken Momos">
+                <div class="menu-info">
+                    <h3>Chicken Momos</h3>
+                    <p>Juicy chicken filled momos</p>
+                    <div class="price">
+                        ₹219
+                        <button class="add-to-cart" onclick="addToCart('Chicken Momos', 219, 'https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')">Add +</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Item 6 - Chocolate Momos -->
+            <div class="menu-item">
+                <div class="menu-badge">NEW</div>
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Chocolate Momos">
+                <div class="menu-info">
+                    <h3>Chocolate Momos</h3>
+                    <p>Dessert momos with chocolate filling</p>
+                    <div class="price">
+                        ₹159
+                        <button class="add-to-cart" onclick="addToCart('Chocolate Momos', 159, 'https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80')">Add +</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Section with Real Images -->
+    <div class="gallery">
+        <h2 class="section-title">Our Momos Gallery</h2>
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Momo 1">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Momo 2">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Momo 3">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1625220194771-7ebdea0d70ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Momo 4">
+            </div>
+        </div>
+    </div>
+
+    <!-- Special Offer -->
+    <div class="offer">
+        <h2>Special Combo Offer</h2>
+        <p>12 Steamed Momos + 2 Fried Momos + 2 Chutneys</p>
+        <div class="offer-price">₹399</div>
+        <button class="btn-primary" style="margin-top: 30px; background: #ffd966; color: #882e1e; box-shadow: 0 8px 0 #b45f2e;">ORDER COMBO</button>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="testimonials">
+        <h2 class="section-title">What Our Customers Say</h2>
+        <div class="testimonial-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-text">
+                    "Best momos in town! The spicy sauce is absolutely amazing. I order here every week!"
+                </div>
+                <div class="customer">
+                    <div class="customer-img">👩</div>
+                    <div class="customer-info">
+                        <h4>Priya Sharma</h4>
+                        <div class="rating">⭐⭐⭐⭐⭐</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-text">
+                    "The paneer momos are my favorite. Fresh, hot and perfectly cooked. Highly recommended!"
+                </div>
+                <div class="customer">
+                    <div class="customer-img">👨</div>
+                    <div class="customer-info">
+                        <h4>Rahul Kumar</h4>
+                        <div class="rating">⭐⭐⭐⭐⭐</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-text">
+                    "Fast delivery, great packaging and delicious food. The chocolate momos are unique!"
+                </div>
+                <div class="customer">
+                    <div class="customer-img">👩</div>
+                    <div class="customer-info">
+                        <h4>Neha Singh</h4>
+                        <div class="rating">⭐⭐⭐⭐</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Momo Magic</h3>
+                <p>Your favorite momo destination since 2020</p>
+                <p>📍 123, Food Street, New Delhi</p>
+                <p>📞 +91 98765 43210</p>
+                <p>✉️ hello@momomagic.com</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <p>About Us</p>
+                <p>Menu</p>
+                <p>Offers</p>
+                <p>Contact</p>
+            </div>
+            <div class="footer-section">
+                <h3>Hours</h3>
+                <p>Monday - Friday: 11am - 11pm</p>
+                <p>Saturday - Sunday: 11am - 1am</p>
+                <p>Kitchen open all day!</p>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="#">📱</a>
+                    <a href="#">📘</a>
+                    <a href="#">📷</a>
+                    <a href="#">🐦</a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2024 Momo Magic. All rights reserved. Made with 🥟 love
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h2>Your Cart 🛒</h2>
+            <span class="close-cart" onclick="toggleCart()">×</span>
+        </div>
+        <div id="cartItems">
+            <!-- Cart items will appear here -->
+        </div>
+        <div class="cart-total">
+            <span>Total:</span>
+            <span id="cartTotal">₹0</span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()">Checkout →</button>
+    </div>
+
+    <!-- Cart Toggle Button -->
+    <div class="cart-toggle" onclick="toggleCart()">
+        🛒
+        <span class="cart-count" id="cartCount">0</span>
+    </div>
+
+    <script>
+        // Cart functionality
+        let cart = [];
+        
+        function addToCart(name, price, image) {
+            cart.push({ name, price, image });
+            updateCart();
+            // Open cart when item added
+            document.getElementById('cartSidebar').classList.add('open');
+            // Animation feedback
+            alert(`${name} added to cart!`);
+        }
+        
+        function updateCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            const cartCount = document.getElementById('cartCount');
+            
+            let html = '';
+            let total = 0;
+            
+            cart.forEach((item, index) => {
+                total += item.price;
+                html += `
+                    <div class="cart-item">
+                        <div class="cart-item-img">
+                            <img src="${item.image}" alt="${item.name}">
+                        </div>
+                        <div class="cart-item-details">
+                            <h4>${item.name}</h4>
+                            <p>₹${item.price}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartItems.innerHTML = html || '<p style="text-align: center; color: #999; padding: 30px;">Your cart is empty</p>';
+            cartTotal.innerText = `₹${total}`;
+            cartCount.innerText = cart.length;
+        }
+        
+        function toggleCart() {
+            document.getElementById('cartSidebar').classList.toggle('open');
+        }
+        
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            alert('Thank you for ordering! Your momos will arrive soon 🥟');
+            cart = [];
+            updateCart();
+            toggleCart();
+        }
+        
+        // Close cart when clicking outside
+        document.addEventListener('click', function(e) {
+            const cart = document.getElementById('cartSidebar');
+            const toggle = document.querySelector('.cart-toggle');
+            
+            if (!cart.contains(e.target) && !toggle.contains(e.target) && cart.classList.contains('open')) {
+                cart.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
