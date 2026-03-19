@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndiaTube - Desi Streaming Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .btn-press:active { transform: scale(0.95); }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in { animation: slideIn 0.3s ease; }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%,100% { opacity:1; }
+            50% { opacity:0.6; }
+        }
+        .shorts-scroll { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh; }
+        .short-item { scroll-snap-align: start; }
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+        }
+        @media (min-width: 769px) {
+            .mobile-only { display: none !important; }
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .video-grid { grid-template-columns: 1fr; }
+        }
+        @media (min-width: 1400px) {
+            .video-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        }
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 99; backdrop-filter: blur(2px);
+        }
+        .range-input {
+            -webkit-appearance: none; height: 4px; border-radius: 2px;
+            outline: none; cursor: pointer;
+        }
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 12px; height: 12px;
+            border-radius: 50%; background: #fff; cursor: pointer;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .notif-badge {
+            position: absolute; top: -4px; right: -4px; background: #ff0000;
+            color: white; border-radius: 50%; width: 16px; height: 16px;
+            font-size: 10px; display: flex; align-items: center;
+            justify-content: center; font-weight: bold;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ============================================================
+        // FIREBASE CONFIGURATION
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAhCQEShzXnXzUN7kuZvUzPVJ0n5OJpk14",
+            authDomain: "indiatube-5e571.firebaseapp.com",
+            databaseURL: "https://indiatube-5e571-default-rtdb.firebaseio.com",
+            projectId: "indiatube-5e571",
+            storageBucket: "indiatube-5e571.firebasestorage.app",
+            messagingSenderId: "420000544967",
+            appId: "1:420000544967:web:d09a978d8abfa648bda6e2",
+            measurementId: "G-F3RZMBLBV6"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ============================================================
+        // MOCK DATA LAYER (for initial Firebase seeding)
+        // ============================================================
+        const MOCK_USERS = [
+            { id: "u1", username: "RahulCreates", email: "rahul@example.com", password: "pass123", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul", bio: "Tech & Gaming creator from Mumbai 🎮", subscribers: 124500, banner: "#1a1a2e" },
+            { id: "u2", username: "PriyaMusic", email: "priya@example.com", password: "pass123", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya", bio: "Classical & Fusion music | Delhi", subscribers: 87300, banner: "#16213e" },
+            { id: "u3", username: "TechWithAnkit", email: "ankit@example.com", password: "pass123", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ankit", bio: "Making tech simple for India 🇮🇳", subscribers: 345000, banner: "#0f3460" },
+            { id: "u4", username: "FoodieSneha", email: "sneha@example.com", password: "pass123", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha", bio: "Street food & recipes | Kolkata 🍜", subscribers: 56700, banner: "#533483" },
+        ];
+
+        const MOCK_VIDEOS = [
+            { id: "v1", title: "Top 10 Hidden Places in India You Must Visit in 2025", channelId: "u1", channelName: "RahulCreates", thumbnail: "https://picsum.photos/seed/india1/640/360", duration: "18:42", views: 2340000, likes: 87400, dislikes: 1200, comments: [], tags: ["travel", "india"], category: "Entertainment", description: "Discover the most breathtaking hidden gems across India…", uploadDate: "2025-03-10", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", isShort: false },
+            { id: "v2", title: "Learn Python in 1 Hour - Complete Beginner's Guide (Hindi)", channelId: "u3", channelName: "TechWithAnkit", thumbnail: "https://picsum.photos/seed/python2/640/360", duration: "1:02:15", views: 5670000, likes: 234000, dislikes: 4500, comments: [], tags: ["python", "programming", "hindi"], category: "Education", description: "The ultimate Python tutorial in Hindi for absolute beginners…", uploadDate: "2025-02-28", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", isShort: false },
+            { id: "v3", title: "Bollywood Dance Mashup 2025 🔥 | New Hit Songs", channelId: "u2", channelName: "PriyaMusic", thumbnail: "https://picsum.photos/seed/dance3/640/360", duration: "12:30", views: 8900000, likes: 456000, dislikes: 8900, comments: [], tags: ["music", "bollywood", "dance"], category: "Music", description: "Epic Bollywood mashup featuring all the biggest hits of 2025…", uploadDate: "2025-03-05", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", isShort: false },
+            { id: "v4", title: "Mumbai Street Food Tour - Vada Pav, Pav Bhaji & More!", channelId: "u4", channelName: "FoodieSneha", thumbnail: "https://picsum.photos/seed/food4/640/360", duration: "22:10", views: 1230000, likes: 67800, dislikes: 890, comments: [], tags: ["food", "mumbai", "streetfood"], category: "Entertainment", description: "Join me on an incredible street food adventure in Mumbai…", uploadDate: "2025-03-12", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", isShort: false },
+            { id: "v5", title: "How I Built a ₹10 Lakh Startup at 22 | My Story", channelId: "u1", channelName: "RahulCreates", thumbnail: "https://picsum.photos/seed/startup5/640/360", duration: "25:44", views: 3450000, likes: 178000, dislikes: 2300, comments: [], tags: ["startup", "business", "india"], category: "Tech", description: "The full story of how I bootstrapped my startup with zero investment…", uploadDate: "2025-03-01", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4", isShort: false },
+            { id: "v6", title: "BGMI Championship Finals 2025 | Epic Clutch Moments", channelId: "u1", channelName: "RahulCreates", thumbnail: "https://picsum.photos/seed/gaming6/640/360", duration: "45:22", views: 7890000, likes: 389000, dislikes: 12000, comments: [], tags: ["gaming", "bgmi", "esports"], category: "Gaming", description: "Watch the most insane clutch plays from the BGMI Championship Finals…", uploadDate: "2025-03-08", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", isShort: false },
+            { id: "v7", title: "Raag Bhairav | Morning Classical Sitar Performance", channelId: "u2", channelName: "PriyaMusic", thumbnail: "https://picsum.photos/seed/classical7/640/360", duration: "38:00", views: 456000, likes: 34500, dislikes: 234, comments: [], tags: ["classical", "sitar", "raag"], category: "Music", description: "A soul-stirring performance of Raag Bhairav on sitar at dawn…", uploadDate: "2025-02-20", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4", isShort: false },
+            { id: "v8", title: "React vs Next.js in 2025 | Which Should You Learn?", channelId: "u3", channelName: "TechWithAnkit", thumbnail: "https://picsum.photos/seed/react8/640/360", duration: "15:33", views: 2100000, likes: 98700, dislikes: 3400, comments: [], tags: ["react", "nextjs", "webdev"], category: "Tech", description: "Complete comparison of React vs Next.js for 2025 developers…", uploadDate: "2025-03-14", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4", isShort: false },
+            // Shorts
+            { id: "s1", title: "Quick Biryani Hack #Shorts", channelId: "u4", channelName: "FoodieSneha", thumbnail: "https://picsum.photos/seed/short1/360/640", duration: "0:58", views: 12000000, likes: 890000, dislikes: 12000, comments: [], tags: ["shorts", "food", "hack"], category: "Entertainment", description: "The quickest biryani hack ever!", uploadDate: "2025-03-15", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", isShort: true },
+            { id: "s2", title: "One Line Python Trick #Coding #Shorts", channelId: "u3", channelName: "TechWithAnkit", thumbnail: "https://picsum.photos/seed/short2/360/640", duration: "0:45", views: 8700000, likes: 567000, dislikes: 8900, comments: [], tags: ["shorts", "python", "coding"], category: "Tech", description: "Mind-blowing one-liner in Python!", uploadDate: "2025-03-16", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", isShort: true },
+            { id: "s3", title: "Mumbai Sunset Time-lapse #Shorts", channelId: "u1", channelName: "RahulCreates", thumbnail: "https://picsum.photos/seed/short3/360/640", duration: "0:32", views: 5400000, likes: 345000, dislikes: 4500, comments: [], tags: ["shorts", "mumbai", "nature"], category: "Entertainment", description: "Stunning Mumbai sunset!", uploadDate: "2025-03-17", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", isShort: true },
+            { id: "s4", title: "Classical Fusion in 60 Seconds #Shorts", channelId: "u2", channelName: "PriyaMusic", thumbnail: "https://picsum.photos/seed/short4/360/640", duration: "0:60", views: 3200000, likes: 234000, dislikes: 2300, comments: [], tags: ["shorts", "music", "fusion"], category: "Music", description: "East meets West in 60 seconds!", uploadDate: "2025-03-18", videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", isShort: true },
+        ];
+
+        const CATEGORIES = ["All", "Music", "Gaming", "Education", "Tech", "Entertainment", "Travel", "Food", "Sports"];
+
+        // ============================================================
+        // UTILITIES
+        // ============================================================
+        const formatViews = (n) => {
+            if (n >= 10000000) return (n / 1000000).toFixed(1) + "M";
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+            if (n >= 1000) return (n / 1000).toFixed(0) + "K";
+            return n.toString();
+        };
+
+        const formatDate = (d) => {
+            const diff = Math.floor((Date.now() - new Date(d)) / 86400000);
+            if (diff === 0) return "Today";
+            if (diff === 1) return "1 day ago";
+            if (diff < 7) return diff + " days ago";
+            if (diff < 30) return Math.floor(diff / 7) + " weeks ago";
+            return Math.floor(diff / 30) + " months ago";
+        };
+
+        const formatDuration = (s) => s;
+        const formatCount = (n) => {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+            if (n >= 1000) return (n / 1000).toFixed(0) + "K";
+            return n;
+        };
+
+        // ============================================================
+        // FIREBASE DATABASE SERVICE
+        // ============================================================
+        const FirebaseDB = {
+            init: async () => {
+                try {
+                    const usersSnapshot = await database.ref('users').get();
+                    if (!usersSnapshot.exists()) {
+                        console.log("Seeding users...");
+                        for (const user of MOCK_USERS) {
+                            await database.ref('users/' + user.id).set(user);
+                        }
+                    }
+
+                    const videosSnapshot = await database.ref('videos').get();
+                    if (!videosSnapshot.exists()) {
+                        console.log("Seeding videos...");
+                        for (const video of MOCK_VIDEOS) {
+                            const videoWithComments = {
+                                ...video,
+                                comments: [
+                                    { id: "c1_" + video.id, userId: "u2", username: "PriyaMusic", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya", text: "Amazing content! Keep it up 🔥", likes: 234, date: "2025-03-11" },
+                                    { id: "c2_" + video.id, userId: "u3", username: "TechWithAnkit", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ankit", text: "This is exactly what I was looking for. Thank you so much!", likes: 156, date: "2025-03-12" },
+                                    { id: "c3_" + video.id, userId: "u1", username: "RahulCreates", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul", text: "Subscribed! Can't wait for more videos like this.", likes: 89, date: "2025-03-13" },
+                                ]
+                            };
+                            await database.ref('videos/' + video.id).set(videoWithComments);
+                        }
+                    }
+                    
+                    console.log("Firebase initialized successfully");
+                } catch (error) {
+                    console.error("Firebase initialization error:", error);
+                }
+            },
+
+            getUsers: async () => {
+                const snapshot = await database.ref('users').get();
+                return snapshot.exists() ? Object.values(snapshot.val()) : [];
+            },
+            
+            getUser: async (userId) => {
+                const snapshot = await database.ref('users/' + userId).get();
+                return snapshot.exists() ? snapshot.val() : null;
+            },
+            
+            getUserByEmail: async (email) => {
+                const users = await FirebaseDB.getUsers();
+                return users.find(u => u.email === email) || null;
+            },
+            
+            createUser: async (userData) => {
+                const userId = 'u_' + Date.now();
+                const newUser = { id: userId, ...userData };
+                await database.ref('users/' + userId).set(newUser);
+                return newUser;
+            },
+
+            getVideos: async () => {
+                const snapshot = await database.ref('videos').get();
+                return snapshot.exists() ? Object.values(snapshot.val()) : [];
+            },
+            
+            getVideo: async (videoId) => {
+                const snapshot = await database.ref('videos/' + videoId).get();
+                return snapshot.exists() ? snapshot.val() : null;
+            },
+            
+            getUserVideos: async (channelId) => {
+                const videos = await FirebaseDB.getVideos();
+                return videos.filter(v => v.channelId === channelId && !v.isShort);
+            },
+            
+            getShorts: async () => {
+                const videos = await FirebaseDB.getVideos();
+                return videos.filter(v => v.isShort);
+            },
+            
+            createVideo: async (videoData) => {
+                const videoId = 'v_' + Date.now();
+                const newVideo = { id: videoId, ...videoData };
+                await database.ref('videos/' + videoId).set(newVideo);
+                return newVideo;
+            },
+            
+            updateVideo: async (videoId, updates) => {
+                await database.ref('videos/' + videoId).set(updates);
+            },
+            
+            addComment: async (videoId, comment) => {
+                const video = await FirebaseDB.getVideo(videoId);
+                if (video) {
+                    const updatedComments = [comment, ...(video.comments || [])];
+                    await database.ref('videos/' + videoId + '/comments').set(updatedComments);
+                }
+            },
+
+            getSubscriptions: async (userId) => {
+                const snapshot = await database.ref('subscriptions/' + userId).get();
+                return snapshot.exists() ? snapshot.val() : [];
+            },
+            
+            toggleSubscription: async (userId, channelId) => {
+                const subs = await FirebaseDB.getSubscriptions(userId);
+                let updatedSubs;
+                if (subs.includes(channelId)) {
+                    updatedSubs = subs.filter(id => id !== channelId);
+                } else {
+                    updatedSubs = [...subs, channelId];
+                }
+                await database.ref('subscriptions/' + userId).set(updatedSubs);
+                return updatedSubs;
+            },
+
+            getLikeStatus: async (userId, videoId) => {
+                const snapshot = await database.ref('likes/' + userId + '_' + videoId).get();
+                return snapshot.exists() ? snapshot.val() : null;
+            },
+            
+            toggleLike: async (userId, videoId, currentStatus) => {
+                const likeKey = userId + '_' + videoId;
+                if (currentStatus === "like") {
+                    await database.ref('likes/' + likeKey).remove();
+                    return null;
+                } else {
+                    await database.ref('likes/' + likeKey).set("like");
+                    return "like";
+                }
+            },
+            
+            toggleDislike: async (userId, videoId, currentStatus) => {
+                const likeKey = userId + '_' + videoId;
+                if (currentStatus === "dislike") {
+                    await database.ref('likes/' + likeKey).remove();
+                    return null;
+                } else {
+                    await database.ref('likes/' + likeKey).set("dislike");
+                    return "dislike";
+                }
+            },
+
+            getWatchLater: async (userId) => {
+                const snapshot = await database.ref('watchlater/' + userId).get();
+                return snapshot.exists() ? snapshot.val() : [];
+            },
+            
+            toggleWatchLater: async (userId, video) => {
+                const watchLater = await FirebaseDB.getWatchLater(userId);
+                const exists = watchLater.find(v => v.id === video.id);
+                let updated;
+                if (exists) {
+                    updated = watchLater.filter(v => v.id !== video.id);
+                } else {
+                    updated = [...watchLater, video];
+                }
+                await database.ref('watchlater/' + userId).set(updated);
+                return updated;
+            },
+
+            getHistory: async (userId) => {
+                const snapshot = await database.ref('history/' + userId).get();
+                return snapshot.exists() ? snapshot.val() : [];
+            },
+            
+            addToHistory: async (userId, video) => {
+                const history = await FirebaseDB.getHistory(userId);
+                const filtered = history.filter(v => v.id !== video.id);
+                const updated = [video, ...filtered].slice(0, 50);
+                await database.ref('history/' + userId).set(updated);
+            }
+        };
+
+        // ============================================================
+        // ICONS
+        // ============================================================
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                home: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>,
+                fire: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>,
+                shorts: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M17.77 10.32l-1.2-.5L18 9.06c1.84-.96 2.56-3.22 1.6-5.06s-3.22-2.56-5.06-1.6L6 6.94c-1.29.68-2.07 2.04-2 3.49.07 1.42.93 2.67 2.22 3.25l1.2.5L6 14.94c-1.84.96-2.56 3.22-1.6 5.06.96 1.84 3.22 2.56 5.06 1.6l8.54-4.54c1.29-.68 2.07-2.04 2-3.49-.07-1.42-.93-2.67-2.23-3.25zM10 14.45v-5l5 2.5-5 2.5z"/></svg>,
+                subscribe: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M10 18v-2h4v2h-4zm-4-4v-2h12v2H6zm-2-4V8h16v2H4z"/></svg>,
+                library: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>,
+                history: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>,
+                watchlater: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>,
+                search: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>,
+                menu: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>,
+                close: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>,
+                bell: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>,
+                upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>,
+                like: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>,
+                dislike: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>,
+                share: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>,
+                comment: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>,
+                more: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>,
+                play: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M8 5v14l11-7z"/></svg>,
+                pause: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>,
+                fullscreen: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>,
+                volume: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>,
+                mute: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>,
+                settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>,
+                sun: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>,
+                moon: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>,
+                plus: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>,
+                back: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>,
+                check: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>,
+                playlist: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4zm16 0l-5 3V13z"/></svg>,
+                trending: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>,
+                india: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg>,
+            };
+            return icons[name] || null;
+        };
+
+        // ============================================================
+        // VIDEO CARD Component
+        // ============================================================
+        function VideoCard({ video, T, navigate, currentUser, showToast, horizontal = false }) {
+            const [saved, setSaved] = useState(false);
+
+            useEffect(() => {
+                const checkSaved = async () => {
+                    if (currentUser) {
+                        const watchLater = await FirebaseDB.getWatchLater(currentUser.id);
+                        setSaved(!!watchLater.find(v => v.id === video.id));
+                    }
+                };
+                checkSaved();
+            }, [currentUser, video.id]);
+
+            const handleSaveLater = async (e) => {
+                e.stopPropagation();
+                if (!currentUser) {
+                    showToast("Sign in to save videos", "error");
+                    return;
+                }
+                const updated = await FirebaseDB.toggleWatchLater(currentUser.id, video);
+                setSaved(!!updated.find(v => v.id === video.id));
+                showToast(saved ? "Removed from Watch Later" : "Saved to Watch Later");
+            };
+
+            if (horizontal) {
+                return (
+                    <div onClick={() => navigate("watch", { video })} className="hover-scale btn-press" style={{ display: "flex", gap: 10, cursor: "pointer", padding: "8px 0" }}>
+                        <div style={{ position: "relative", flexShrink: 0, width: 160, height: 90, borderRadius: 8, overflow: "hidden" }}>
+                            <img src={video.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" loading="lazy" />
+                            <span style={{ position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 11, padding: "1px 4px", borderRadius: 3 }}>{video.duration}</span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.4, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{video.title}</div>
+                            <div style={{ fontSize: 12, color: T.textSub }}>{video.channelName}</div>
+                            <div style={{ fontSize: 12, color: T.textSub }}>{formatViews(video.views)} views • {formatDate(video.uploadDate)}</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="fade-in" style={{ cursor: "pointer" }}>
+                    <div onClick={() => navigate("watch", { video })} style={{ position: "relative", borderRadius: 12, overflow: "hidden", aspectRatio: "16/9" }} className="hover-scale">
+                        <img src={video.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" loading="lazy" />
+                        <span style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.85)", color: "#fff", fontSize: 12, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>{video.duration}</span>
+                        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "all 0.2s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.3)"; e.currentTarget.style.opacity = "1"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0)"; e.currentTarget.style.opacity = "0"; }}>
+                            <div style={{ background: "rgba(255,255,255,0.9)", borderRadius: "50%", width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <Icon name="play" size={24} />
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+                        <img src={(() => { 
+                            const user = MOCK_USERS.find(u => u.id === video.channelId);
+                            return user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.channelName}`;
+                        })()} style={{ width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }} onClick={() => navigate("profile", { userId: video.channelId })} alt="" />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.4, marginBottom: 4, cursor: "pointer", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }} onClick={() => navigate("watch", { video })}>{video.title}</div>
+                            <div style={{ fontSize: 13, color: T.textSub, cursor: "pointer" }} onClick={() => navigate("profile", { userId: video.channelId })}>{video.channelName}</div>
+                            <div style={{ fontSize: 13, color: T.textSub }}>{formatViews(video.views)} views • {formatDate(video.uploadDate)}</div>
+                        </div>
+                        <button onClick={handleSaveLater} style={{ background: "none", border: "none", color: saved ? T.accent : T.textSub, cursor: "pointer", padding: 4, flexShrink: 0, display: "flex" }}>
+                            <Icon name="watchlater" size={18} />
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // SIDEBAR CONTENT
+        // ============================================================
+        function SidebarContent({ T, navigate, page, currentUser, onClose }) {
+            const items = [
+                { icon: "home", label: "Home", p: "home" },
+                { icon: "fire", label: "Trending", p: "home" },
+                { icon: "shorts", label: "Shorts", p: "shorts" },
+            ];
+            const userItems = [
+                { icon: "subscribe", label: "Subscriptions", p: "profile" },
+                { icon: "history", label: "History", p: "profile" },
+                { icon: "watchlater", label: "Watch Later", p: "profile" },
+                { icon: "playlist", label: "Playlists", p: "profile" },
+            ];
+            const exploreItems = [
+                { icon: "trending", label: "Trending", p: "home" },
+                { icon: "comment", label: "Music", p: "home" },
+                { icon: "play", label: "Gaming", p: "home" },
+            ];
+
+            return (
+                <div style={{ padding: "0 0 80px 0" }}>
+                    {items.map(i => (
+                        <button key={i.p + i.label} onClick={() => { navigate(i.p); onClose(); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 16, padding: "10px 16px", background: page === i.p ? T.hover : "none", border: "none", color: T.text, cursor: "pointer", fontSize: 14, borderRadius: 8, margin: "1px 8px", width: "calc(100% - 16px)" }}>
+                            <Icon name={i.icon} size={20} />{i.label}
+                        </button>
+                    ))}
+                    <div style={{ height: 1, background: T.border, margin: "12px 16px" }} />
+                    <div style={{ padding: "0 16px 8px", fontSize: 12, fontWeight: 600, color: T.textSub, textTransform: "uppercase", letterSpacing: 0.5 }}>You</div>
+                    {userItems.map(i => (
+                        <button key={i.label} onClick={() => { navigate(currentUser ? i.p : "login"); onClose(); }} style={{ width: "calc(100% - 16px)", display: "flex", alignItems: "center", gap: 16, padding: "10px 16px", background: "none", border: "none", color: T.text, cursor: "pointer", fontSize: 14, borderRadius: 8, margin: "1px 8px" }}>
+                            <Icon name={i.icon} size={20} />{i.label}
+                        </button>
+                    ))}
+                    <div style={{ height: 1, background: T.border, margin: "12px 16px" }} />
+                    <div style={{ padding: "0 16px 8px", fontSize: 12, fontWeight: 600, color: T.textSub, textTransform: "uppercase", letterSpacing: 0.5 }}>Explore</div>
+                    {exploreItems.map(i => (
+                        <button key={i.label} onClick={() => { navigate(i.p); onClose(); }} style={{ width: "calc(100% - 16px)", display: "flex", alignItems: "center", gap: 16, padding: "10px 16px", background: "none", border: "none", color: T.text, cursor: "pointer", fontSize: 14, borderRadius: 8, margin: "1px 8px" }}>
+                            <Icon name={i.icon} size={20} />{i.label}
+                        </button>
+                    ))}
+                    <div style={{ height: 1, background: T.border, margin: "12px 16px" }} />
+                    <div style={{ padding: "16px", fontSize: 12, color: T.textSub, lineHeight: 1.8 }}>
+                        © 2025 IndiaTube<br/>Made with ❤️ in India 🇮🇳
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // HOME PAGE
+        // ============================================================
+        function HomePage({ T, navigate, activeCategory, setActiveCategory, currentUser, showToast }) {
+            const [videos, setVideos] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const fetchVideos = async () => {
+                    setLoading(true);
+                    try {
+                        let vids = await FirebaseDB.getVideos();
+                        vids = vids.filter(v => !v.isShort);
+                        if (activeCategory !== "All") vids = vids.filter(v => v.category === activeCategory);
+                        setVideos(vids);
+                    } catch (error) {
+                        console.error("Error fetching videos:", error);
+                        showToast("Failed to load videos", "error");
+                    }
+                    setLoading(false);
+                };
+                fetchVideos();
+            }, [activeCategory]);
+
+            return (
+                <div style={{ padding: "16px 16px 80px" }}>
+                    {/* Category Pills */}
+                    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 16, scrollbarWidth: "none" }}>
+                        {CATEGORIES.map(cat => (
+                            <button key={cat} onClick={() => setActiveCategory(cat)} style={{
+                                flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, transition: "all 0.2s",
+                                background: activeCategory === cat ? T.text : T.surface2, color: activeCategory === cat ? T.bg : T.text
+                            }}>{cat}</button>
+                        ))}
+                    </div>
+
+                    {/* Featured Banner */}
+                    {activeCategory === "All" && videos[0] && !loading && (
+                        <div onClick={() => navigate("watch", { video: videos[0] })} className="hover-scale" style={{ position: "relative", borderRadius: 16, overflow: "hidden", marginBottom: 24, cursor: "pointer", aspectRatio: "16/9", maxHeight: 400 }}>
+                            <img src={videos[0].thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)" }} />
+                            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 20 }}>
+                                <span style={{ background: T.accent, color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4, marginBottom: 8, display: "inline-block" }}>🔥 TRENDING</span>
+                                <div style={{ fontWeight: 700, fontSize: 18, color: "#fff", lineHeight: 1.3 }}>{videos[0].title}</div>
+                                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>{videos[0].channelName} • {formatViews(videos[0].views)} views</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {loading ? (
+                        <div className="video-grid">
+                            {[...Array(8)].map((_, i) => (
+                                <div key={i}>
+                                    <div className="skeleton" style={{ aspectRatio: "16/9", borderRadius: 12 }} />
+                                    <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+                                        <div className="skeleton" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0 }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div className="skeleton" style={{ height: 14, marginBottom: 6, borderRadius: 4 }} />
+                                            <div className="skeleton" style={{ height: 12, width: "60%", borderRadius: 4 }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="video-grid fade-in">
+                            {videos.slice(activeCategory === "All" ? 1 : 0).map(video => (
+                                <VideoCard key={video.id} video={video} T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================================
+        // WATCH PAGE
+        // ============================================================
+        function WatchPage({ T, video, navigate, currentUser, showToast }) {
+            const [liked, setLiked] = useState(false);
+            const [disliked, setDisliked] = useState(false);
+            const [likes, setLikes] = useState(video.likes);
+            const [subscribed, setSubscribed] = useState(false);
+            const [comment, setComment] = useState("");
+            const [comments, setComments] = useState([]);
+            const [showDesc, setShowDesc] = useState(false);
+            const [relatedVideos, setRelatedVideos] = useState([]);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [volume, setVolume] = useState(80);
+            const [muted, setMuted] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [duration, setDuration] = useState(0);
+            const [currentTime, setCurrentTime] = useState(0);
+            const [isFullscreen, setIsFullscreen] = useState(false);
+            const [showControls, setShowControls] = useState(true);
+            const [aiLoading, setAiLoading] = useState(false);
+            const [aiSummary, setAiSummary] = useState("");
+            const videoRef = useRef(null);
+            const controlsTimer = useRef(null);
+
+            useEffect(() => {
+                const loadData = async () => {
+                    const vid = await FirebaseDB.getVideo(video.id);
+                    if (vid) setComments(vid.comments || []);
+                    
+                    const vids = await FirebaseDB.getVideos();
+                    setRelatedVideos(vids.filter(v => v.id !== video.id && !v.isShort).slice(0, 8));
+
+                    if (currentUser) {
+                        await FirebaseDB.addToHistory(currentUser.id, video);
+                        const subs = await FirebaseDB.getSubscriptions(currentUser.id);
+                        setSubscribed(subs.includes(video.channelId));
+                        const status = await FirebaseDB.getLikeStatus(currentUser.id, video.id);
+                        setLiked(status === "like");
+                        setDisliked(status === "dislike");
+                    }
+                };
+                loadData();
+            }, [video.id]);
+
+            const handleLike = async () => {
+                if (!currentUser) { showToast("Sign in to like videos", "error"); return; }
+                const newStatus = await FirebaseDB.toggleLike(currentUser.id, video.id, liked ? "like" : null);
+                if (newStatus === "like") {
+                    setLiked(true);
+                    setDisliked(false);
+                    setLikes(l => l + 1);
+                } else {
+                    setLiked(false);
+                    setLikes(l => l - 1);
+                }
+            };
+
+            const handleDislike = async () => {
+                if (!currentUser) { showToast("Sign in to rate videos", "error"); return; }
+                const newStatus = await FirebaseDB.toggleDislike(currentUser.id, video.id, disliked ? "dislike" : null);
+                if (newStatus === "dislike") {
+                    setDisliked(true);
+                    if (liked) {
+                        setLiked(false);
+                        setLikes(l => l - 1);
+                    }
+                } else {
+                    setDisliked(false);
+                }
+            };
+
+            const handleSubscribe = async () => {
+                if (!currentUser) { showToast("Sign in to subscribe", "error"); return; }
+                const updated = await FirebaseDB.toggleSubscription(currentUser.id, video.channelId);
+                setSubscribed(updated.includes(video.channelId));
+                showToast(subscribed ? "Unsubscribed" : "Subscribed! 🔔");
+            };
+
+            const handleComment = async () => {
+                if (!currentUser) { showToast("Sign in to comment", "error"); return; }
+                if (!comment.trim()) return;
+                const newComment = { 
+                    id: "c_" + Date.now(), 
+                    userId: currentUser.id, 
+                    username: currentUser.username, 
+                    avatar: currentUser.avatar, 
+                    text: comment.trim(), 
+                    likes: 0, 
+                    date: new Date().toISOString().split("T")[0] 
+                };
+                await FirebaseDB.addComment(video.id, newComment);
+                setComments([newComment, ...comments]);
+                setComment("");
+                showToast("Comment posted!");
+            };
+
+            const handleAISummary = async () => {
+                setAiLoading(true);
+                try {
+                    const response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 1000,
+                            messages: [{
+                                role: "user",
+                                content: `Generate a brief, engaging AI summary for this YouTube-style video:\nTitle: "${video.title}"\nChannel: ${video.channelName}\nCategory: ${video.category}\nDescription: ${video.description}\nViews: ${formatViews(video.views)}\n\nProvide: 1) A 2-3 sentence summary of what viewers can expect, 2) Key highlights/topics covered, 3) Why this is trending/popular. Keep it concise and helpful for Indian viewers.`
+                            }]
+                        })
+                    });
+                    const data = await response.json();
+                    setAiSummary(data.content?.[0]?.text || "Summary unavailable.");
+                } catch {
+                    setAiSummary("AI summary temporarily unavailable. Please try again.");
+                }
+                setAiLoading(false);
+            };
+
+            const formatTime = (s) => {
+                const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+                return `${m}:${sec.toString().padStart(2, "0")}`;
+            };
+
+            const handleVideoClick = () => {
+                if (videoRef.current) {
+                    if (isPlaying) { videoRef.current.pause(); setIsPlaying(false); }
+                    else { videoRef.current.play(); setIsPlaying(true); }
+                }
+                setShowControls(true);
+                clearTimeout(controlsTimer.current);
+                controlsTimer.current = setTimeout(() => setShowControls(false), 3000);
+            };
+
+            const [channel, setChannel] = useState({ username: video.channelName, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.channelName}`, subscribers: 0 });
+
+            useEffect(() => {
+                const fetchChannel = async () => {
+                    const user = await FirebaseDB.getUser(video.channelId);
+                    if (user) setChannel(user);
+                };
+                fetchChannel();
+            }, [video.channelId]);
+
+            return (
+                <div style={{ display: "flex", gap: 24, padding: "16px 16px 80px", maxWidth: 1600, margin: "0 auto", flexWrap: "wrap" }}>
+                    <div style={{ flex: "1 1 640px", minWidth: 0 }}>
+                        <div style={{ position: "relative", borderRadius: isFullscreen ? 0 : 12, overflow: "hidden", background: "#000", aspectRatio: "16/9" }}
+                            onMouseMove={() => { setShowControls(true); clearTimeout(controlsTimer.current); controlsTimer.current = setTimeout(() => setShowControls(false), 3000); }}>
+                            <video
+                                ref={videoRef}
+                                src={video.videoUrl}
+                                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                                onTimeUpdate={e => { setCurrentTime(e.target.currentTime); setProgress(e.target.duration ? (e.target.currentTime / e.target.duration) * 100 : 0); }}
+                                onLoadedMetadata={e => setDuration(e.target.duration)}
+                                onEnded={() => setIsPlaying(false)}
+                                onClick={handleVideoClick}
+                            />
+
+                            {!isPlaying && (
+                                <div onClick={handleVideoClick} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                                    <div style={{ background: "rgba(0,0,0,0.7)", borderRadius: "50%", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
+                                        <Icon name="play" size={32} />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.8))", padding: "40px 16px 12px", opacity: showControls ? 1 : 0, transition: "opacity 0.3s" }}>
+                                <input type="range" min={0} max={100} value={progress} onChange={e => {
+                                    const p = Number(e.target.value);
+                                    if (videoRef.current && duration) { videoRef.current.currentTime = (p / 100) * duration; setProgress(p); }
+                                }} className="range-input" style={{ width: "100%", marginBottom: 8, background: `linear-gradient(to right, #ff0000 ${progress}%, #555 ${progress}%)` }} />
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                    <button onClick={handleVideoClick} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", display: "flex" }}>
+                                        <Icon name={isPlaying ? "pause" : "play"} size={22} />
+                                    </button>
+                                    <button onClick={() => { setMuted(!muted); if (videoRef.current) videoRef.current.muted = !muted; }} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", display: "flex" }}>
+                                        <Icon name={muted ? "mute" : "volume"} size={22} />
+                                    </button>
+                                    <input type="range" min={0} max={100} value={muted ? 0 : volume} onChange={e => {
+                                        const v = Number(e.target.value);
+                                        setVolume(v); setMuted(false);
+                                        if (videoRef.current) videoRef.current.volume = v / 100;
+                                    }} className="range-input" style={{ width: 80, background: `linear-gradient(to right, #fff ${muted ? 0 : volume}%, #555 ${muted ? 0 : volume}%)` }} />
+                                    <span style={{ color: "#fff", fontSize: 12, marginLeft: 4 }}>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                    <div style={{ marginLeft: "auto" }}>
+                                        <button onClick={() => {
+                                            if (!document.fullscreenElement && videoRef.current?.closest) {
+                                                videoRef.current.closest("div")?.requestFullscreen?.();
+                                            } else document.exitFullscreen?.();
+                                            setIsFullscreen(!isFullscreen);
+                                        }} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", display: "flex" }}>
+                                            <Icon name="fullscreen" size={22} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: 12 }}>
+                            <h1 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.4, marginBottom: 12 }}>{video.title}</h1>
+                            
+                            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                                <div style={{ display: "flex", background: T.surface2, borderRadius: 20, overflow: "hidden" }}>
+                                    <button onClick={handleLike} style={{ background: "none", border: "none", color: liked ? T.accent : T.text, cursor: "pointer", padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, borderRight: `1px solid ${T.border}` }}>
+                                        <Icon name="like" size={18} /> {formatCount(likes)}
+                                    </button>
+                                    <button onClick={handleDislike} style={{ background: "none", border: "none", color: disliked ? T.textSub : T.text, cursor: "pointer", padding: "8px 16px", display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}>
+                                        <Icon name="dislike" size={18} />
+                                    </button>
+                                </div>
+                                <button onClick={() => showToast("Link copied to clipboard! 📋")} style={{ background: T.surface2, border: "none", color: T.text, cursor: "pointer", padding: "8px 16px", borderRadius: 20, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
+                                    <Icon name="share" size={18} /> Share
+                                </button>
+                                <button onClick={async () => {
+                                    if (!currentUser) { showToast("Sign in to save", "error"); return; }
+                                    const updated = await FirebaseDB.toggleWatchLater(currentUser.id, video);
+                                    showToast(updated.find(v => v.id === video.id) ? "Saved to Watch Later ✅" : "Removed from Watch Later");
+                                }} style={{ background: T.surface2, border: "none", color: T.text, cursor: "pointer", padding: "8px 16px", borderRadius: 20, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
+                                    <Icon name="watchlater" size={18} /> Save
+                                </button>
+                                <button onClick={handleAISummary} style={{ background: "linear-gradient(135deg, #ff0000, #cc0044)", border: "none", color: "#fff", cursor: "pointer", padding: "8px 16px", borderRadius: 20, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
+                                    ✨ AI Summary
+                                </button>
+                            </div>
+
+                            {(aiLoading || aiSummary) && (
+                                <div style={{ background: T.surface2, borderRadius: 12, padding: 16, marginBottom: 16, borderLeft: `3px solid ${T.accent}` }}>
+                                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: T.accent }}>✨ AI Summary by IndiaTube</div>
+                                    {aiLoading ? <div className="pulse" style={{ color: T.textSub, fontSize: 13 }}>Generating AI summary...</div> : <div style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{aiSummary}</div>}
+                                </div>
+                            )}
+
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
+                                <img src={channel.avatar} onClick={() => navigate("profile", { userId: video.channelId })} style={{ width: 42, height: 42, borderRadius: "50%", cursor: "pointer", border: `2px solid ${T.accent}` }} alt="" />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 700, cursor: "pointer" }} onClick={() => navigate("profile", { userId: video.channelId })}>{channel.username}</div>
+                                    <div style={{ fontSize: 12, color: T.textSub }}>{formatCount(channel.subscribers)} subscribers</div>
+                                </div>
+                                <button onClick={handleSubscribe} style={{ background: subscribed ? T.surface2 : T.accent, color: subscribed ? T.text : "#fff", border: "none", borderRadius: 20, padding: "8px 18px", cursor: "pointer", fontSize: 14, fontWeight: 700, transition: "all 0.2s" }}>
+                                    {subscribed ? "✓ Subscribed" : "Subscribe"}
+                                </button>
+                            </div>
+
+                            <div style={{ background: T.surface2, borderRadius: 12, padding: "12px 16px", marginBottom: 16, cursor: "pointer" }} onClick={() => setShowDesc(!showDesc)}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <span style={{ fontSize: 13, fontWeight: 600 }}>{formatViews(video.views)} views • {formatDate(video.uploadDate)}</span>
+                                    <span style={{ fontSize: 12, color: T.textSub }}>{showDesc ? "▲ Less" : "▼ More"}</span>
+                                </div>
+                                {showDesc && <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.7, color: T.text }}>{video.description}<br/><br/><span style={{ color: T.textSub }}>{video.tags.map(t => "#" + t).join(" ")}</span></div>}
+                            </div>
+
+                            <div>
+                                <h3 style={{ fontWeight: 700, marginBottom: 16 }}>{comments.length} Comments</h3>
+                                {currentUser && (
+                                    <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+                                        <img src={currentUser.avatar} style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0 }} alt="" />
+                                        <div style={{ flex: 1 }}>
+                                            <input value={comment} onChange={e => setComment(e.target.value)} onKeyDown={e => e.key === "Enter" && handleComment()} placeholder="Add a comment..." style={{ width: "100%", background: "none", border: "none", borderBottom: `1px solid ${T.border}`, padding: "8px 0", color: T.text, outline: "none", fontSize: 14 }} />
+                                            {comment && (
+                                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
+                                                    <button onClick={() => setComment("")} style={{ background: "none", border: "none", color: T.textSub, cursor: "pointer", padding: "6px 12px", borderRadius: 20, fontSize: 13 }}>Cancel</button>
+                                                    <button onClick={handleComment} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 20, padding: "6px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Comment</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {comments.map(c => (
+                                    <div key={c.id} style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+                                        <img src={c.avatar} style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0 }} alt="" />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                                                <span style={{ fontWeight: 600, fontSize: 13 }}>{c.username}</span>
+                                                <span style={{ fontSize: 12, color: T.textSub }}>{formatDate(c.date)}</span>
+                                            </div>
+                                            <div style={{ fontSize: 14, lineHeight: 1.6 }}>{c.text}</div>
+                                            <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+                                                <button style={{ background: "none", border: "none", color: T.textSub, cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><Icon name="like" size={14} />{c.likes}</button>
+                                                <button style={{ background: "none", border: "none", color: T.textSub, cursor: "pointer", fontSize: 12 }}>Reply</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ width: 360, flexShrink: 0 }} className="desktop-only">
+                        <h3 style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>Up Next</h3>
+                        {relatedVideos.map(v => (
+                            <VideoCard key={v.id} video={v} T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} horizontal />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // SHORTS PAGE
+        // ============================================================
+        function ShortsPage({ T, navigate, currentUser, showToast }) {
+            const [shorts, setShorts] = useState([]);
+            const [currentIdx, setCurrentIdx] = useState(0);
+            const containerRef = useRef(null);
+            const [liked, setLiked] = useState({});
+
+            useEffect(() => {
+                const fetchShorts = async () => {
+                    const s = await FirebaseDB.getShorts();
+                    setShorts(s);
+                };
+                fetchShorts();
+            }, []);
+
+            const handleScroll = useCallback(() => {
+                if (containerRef.current) {
+                    const idx = Math.round(containerRef.current.scrollTop / window.innerHeight);
+                    setCurrentIdx(idx);
+                }
+            }, []);
+
+            if (!shorts.length) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "80vh", color: T.textSub }}>Loading Shorts…</div>;
+
+            return (
+                <div ref={containerRef} onScroll={handleScroll} className="shorts-scroll" style={{ height: "calc(100vh - 56px)" }}>
+                    {shorts.map((short, idx) => (
+                        <div key={short.id} className="short-item" style={{ height: "calc(100vh - 56px)", display: "flex", alignItems: "center", justifyContent: "center", background: "#000", position: "relative" }}>
+                            <ShortItem short={short} isActive={idx === currentIdx} T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} liked={liked[short.id]} onLike={() => setLiked(l => ({ ...l, [short.id]: !l[short.id] }))} />
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        function ShortItem({ short, isActive, T, navigate, currentUser, showToast, liked, onLike }) {
+            const videoRef = useRef(null);
+            const [isPlaying, setIsPlaying] = useState(false);
+
+            useEffect(() => {
+                if (videoRef.current) {
+                    if (isActive) { videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {}); }
+                    else { videoRef.current.pause(); setIsPlaying(false); }
+                }
+            }, [isActive]);
+
+            return (
+                <div style={{ position: "relative", height: "100%", maxWidth: 400, width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <video ref={videoRef} src={short.videoUrl} loop playsInline style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain", borderRadius: 12 }}
+                        onClick={() => { if (videoRef.current) { if (isPlaying) { videoRef.current.pause(); setIsPlaying(false); } else { videoRef.current.play(); setIsPlaying(true); } } }} />
+
+                    <div style={{ position: "absolute", bottom: 60, left: 16, right: 70 }}>
+                        <div style={{ fontWeight: 700, color: "#fff", marginBottom: 4, textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>@{short.channelName}</div>
+                        <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14, textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>{short.title}</div>
+                    </div>
+
+                    <div style={{ position: "absolute", right: 8, bottom: 80, display: "flex", flexDirection: "column", gap: 20 }}>
+                        {[
+                            { icon: "like", label: liked ? "♥" : formatCount(short.likes + (liked ? 1 : 0)), action: () => { if (!currentUser) { showToast("Sign in to like", "error"); return; } onLike(); }, color: liked ? "#ff6b6b" : "#fff" },
+                            { icon: "comment", label: "423", action: () => showToast("Comments coming soon!") },
+                            { icon: "share", label: "Share", action: () => showToast("Shared! 🔗") },
+                        ].map(({ icon, label, action, color = "#fff" }) => (
+                            <div key={icon} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer" }} onClick={action}>
+                                <div style={{ width: 44, height: 44, background: "rgba(255,255,255,0.15)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
+                                    <Icon name={icon} size={22} className="" />
+                                </div>
+                                <span style={{ color: "#fff", fontSize: 11, fontWeight: 600 }}>{label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {!isPlaying && (
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                            <div style={{ background: "rgba(0,0,0,0.5)", borderRadius: "50%", width: 60, height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <Icon name="play" size={32} />
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.5)", fontSize: 11, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.3)", margin: 2 }} />
+                        Swipe up for next
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // PROFILE PAGE
+        // ============================================================
+        function ProfilePage({ T, userId, navigate, currentUser, showToast }) {
+            const [user, setUser] = useState(null);
+            const [userVideos, setUserVideos] = useState([]);
+            const [activeTab, setActiveTab] = useState("videos");
+            const [subscribed, setSubscribed] = useState(false);
+            const [history, setHistory] = useState([]);
+            const [watchLater, setWatchLater] = useState([]);
+
+            useEffect(() => {
+                const loadData = async () => {
+                    const u = await FirebaseDB.getUser(userId);
+                    setUser(u);
+                    if (u) {
+                        const vids = await FirebaseDB.getUserVideos(u.id);
+                        setUserVideos(vids);
+                        if (currentUser) {
+                            const subs = await FirebaseDB.getSubscriptions(currentUser.id);
+                            setSubscribed(subs.includes(u.id));
+                            const hist = await FirebaseDB.getHistory(currentUser.id);
+                            setHistory(hist);
+                            const wl = await FirebaseDB.getWatchLater(currentUser.id);
+                            setWatchLater(wl);
+                        }
+                    }
+                };
+                loadData();
+            }, [userId, currentUser]);
+
+            if (!user) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
+                <button onClick={() => navigate("login")} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 20, padding: "12px 24px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Sign In to View Profile</button>
+            </div>;
+
+            const isOwn = currentUser?.id === user.id;
+
+            const handleSubscribe = async () => {
+                if (!currentUser) { showToast("Sign in to subscribe", "error"); return; }
+                const updated = await FirebaseDB.toggleSubscription(currentUser.id, user.id);
+                setSubscribed(updated.includes(user.id));
+                showToast(subscribed ? "Unsubscribed" : "Subscribed! 🔔");
+            };
+
+            return (
+                <div style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 80 }}>
+                    <div style={{ height: 180, background: `linear-gradient(135deg, ${user.banner}, #ff0000)`, position: "relative" }}>
+                        <div style={{ position: "absolute", inset: 0, background: "url('https://picsum.photos/seed/banner/1200/180') center/cover", opacity: 0.3 }} />
+                    </div>
+
+                    <div style={{ padding: "0 24px" }}>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 16, marginTop: -40, marginBottom: 16, flexWrap: "wrap" }}>
+                            <img src={user.avatar} style={{ width: 80, height: 80, borderRadius: "50%", border: `4px solid ${T.bg}`, position: "relative", zIndex: 1 }} alt="" />
+                            <div style={{ flex: 1, paddingBottom: 8 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                    <h1 style={{ fontSize: 22, fontWeight: 800 }}>{user.username}</h1>
+                                    <span style={{ background: T.accent, color: "#fff", fontSize: 11, padding: "2px 8px", borderRadius: 12, fontWeight: 700 }}>✓ Creator</span>
+                                </div>
+                                <div style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>{formatCount(user.subscribers)} subscribers • {userVideos.length} videos</div>
+                                <div style={{ color: T.textSub, fontSize: 13, marginTop: 2 }}>{user.bio}</div>
+                            </div>
+                            {!isOwn && (
+                                <button onClick={handleSubscribe} style={{ background: subscribed ? T.surface2 : T.accent, color: subscribed ? T.text : "#fff", border: "none", borderRadius: 20, padding: "10px 20px", cursor: "pointer", fontSize: 14, fontWeight: 700 }}>
+                                    {subscribed ? "✓ Subscribed" : "Subscribe"}
+                                </button>
+                            )}
+                            {isOwn && (
+                                <button onClick={() => navigate("upload")} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 20, padding: "10px 20px", cursor: "pointer", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <Icon name="upload" size={16} /> Upload Video
+                                </button>
+                            )}
+                        </div>
+
+                        <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${T.border}`, marginBottom: 20 }}>
+                            {["videos", ...(isOwn ? ["history", "watchlater", "playlists"] : [])].map(tab => (
+                                <button key={tab} onClick={() => setActiveTab(tab)} style={{ background: "none", border: "none", borderBottom: activeTab === tab ? `2px solid ${T.text}` : "2px solid transparent", color: activeTab === tab ? T.text : T.textSub, cursor: "pointer", padding: "12px 16px", fontSize: 13, fontWeight: 600, textTransform: "capitalize", marginBottom: -1 }}>
+                                    {tab === "watchlater" ? "Watch Later" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+
+                        {activeTab === "videos" && (
+                            userVideos.length ? (
+                                <div className="video-grid fade-in">
+                                    {userVideos.map(v => <VideoCard key={v.id} video={v} T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} />)}
+                                </div>
+                            ) : <div style={{ textAlign: "center", padding: 60, color: T.textSub }}>No videos yet</div>
+                        )}
+                        {activeTab === "history" && (
+                            history.length ? (
+                                <div className="video-grid fade-in">
+                                    {history.map(v => <VideoCard key={v.id} video={v} T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} />)}
+                                </div>
+                            ) : <div style={{ textAlign: "center", padding: 60, color: T.textSub }}>No watch history yet</div>
+                        )}
+                        {activeTab === "watchlater" && (
+                            watchLater.length ? (
+                                <div className="video-grid fade-in">
+                                    {watchLater.map(v => <VideoCard key={v.id} video={v} T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} />)}
+                                </div>
+                            ) : <div style={{ textAlign: "center", padding: 60, color: T.textSub }}>No videos saved yet</div>
+                        )}
+                        {activeTab === "playlists" && (
+                            <div style={{ textAlign: "center", padding: 60, color: T.textSub }}>
+                                <Icon name="playlist" size={48} />
+                                <div style={{ marginTop: 12, fontSize: 16, fontWeight: 600 }}>Create your first playlist</div>
+                                <button onClick={() => showToast("Playlist feature coming soon!")} style={{ marginTop: 16, background: T.accent, color: "#fff", border: "none", borderRadius: 20, padding: "10px 24px", cursor: "pointer", fontSize: 14, fontWeight: 700 }}>+ New Playlist</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // UPLOAD PAGE
+        // ============================================================
+        function UploadPage({ T, navigate, currentUser, showToast }) {
+            const [step, setStep] = useState(1);
+            const [form, setForm] = useState({ title: "", description: "", tags: "", category: "Entertainment" });
+            const [uploading, setUploading] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [dragOver, setDragOver] = useState(false);
+            const [selectedFile, setSelectedFile] = useState(null);
+            const [aiTitle, setAiTitle] = useState("");
+            const [aiLoading, setAiLoading] = useState(false);
+
+            if (!currentUser) return (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60vh", gap: 16 }}>
+                    <Icon name="upload" size={64} />
+                    <div style={{ fontSize: 20, fontWeight: 700 }}>Sign in to upload videos</div>
+                    <button onClick={() => navigate("login")} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 20, padding: "12px 24px", fontSize: 16, cursor: "pointer", fontWeight: 700 }}>Sign In</button>
+                </div>
+            );
+
+            const generateAITitle = async () => {
+                if (!form.description && !form.tags) { showToast("Add description or tags first", "error"); return; }
+                setAiLoading(true);
+                try {
+                    const response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 500,
+                            messages: [{ role: "user", content: `Generate 3 catchy YouTube video titles for an Indian creator based on:\nCategory: ${form.category}\nDescription: ${form.description}\nTags: ${form.tags}\n\nMake them engaging, clickable, and relevant to Indian audience. Return ONLY the 3 titles, one per line, numbered 1. 2. 3.` }]
+                        })
+                    });
+                    const data = await response.json();
+                    setAiTitle(data.content?.[0]?.text || "");
+                } catch {
+                    showToast("AI title generation failed", "error");
+                }
+                setAiLoading(false);
+            };
+
+            const handleUpload = async () => {
+                if (!form.title) { showToast("Please enter a title", "error"); return; }
+                if (!selectedFile && step === 1) { showToast("Please select a video file", "error"); return; }
+                setUploading(true);
+                
+                let p = 0;
+                const interval = setInterval(() => {
+                    p += Math.random() * 15;
+                    if (p >= 100) {
+                        p = 100;
+                        clearInterval(interval);
+                        const newVideo = {
+                            id: "v_" + Date.now(),
+                            title: form.title,
+                            channelId: currentUser.id,
+                            channelName: currentUser.username,
+                            thumbnail: `https://picsum.photos/seed/${Date.now()}/640/360`,
+                            duration: "5:00",
+                            views: 0,
+                            likes: 0,
+                            dislikes: 0,
+                            comments: [],
+                            tags: form.tags.split(",").map(t => t.trim()),
+                            category: form.category,
+                            description: form.description,
+                            uploadDate: new Date().toISOString().split("T")[0],
+                            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                            isShort: false
+                        };
+                        FirebaseDB.createVideo(newVideo);
+                        setUploading(false);
+                        showToast("Video uploaded successfully! 🎉");
+                        setTimeout(() => navigate("profile", { userId: currentUser.id }), 1500);
+                    }
+                    setProgress(p);
+                }, 200);
+            };
+
+            return (
+                <div style={{ maxWidth: 760, margin: "0 auto", padding: "24px 16px 80px" }}>
+                    <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+                        <Icon name="upload" size={28} /> Upload Video
+                    </h1>
+
+                    {!selectedFile ? (
+                        <div
+                            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                            onDragLeave={() => setDragOver(false)}
+                            onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f?.type.startsWith("video/")) setSelectedFile(f); else showToast("Please drop a video file", "error"); }}
+                            onClick={() => document.getElementById("fileInput").click()}
+                            style={{
+                                border: `2px dashed ${dragOver ? T.accent : T.border}`, borderRadius: 16, padding: 60, textAlign: "center", cursor: "pointer",
+                                background: dragOver ? `${T.accent}10` : T.surface2, transition: "all 0.3s", marginBottom: 24
+                            }}>
+                            <input id="fileInput" type="file" accept="video/*" style={{ display: "none" }} onChange={e => e.target.files[0] && setSelectedFile(e.target.files[0])} />
+                            <Icon name="upload" size={56} />
+                            <div style={{ fontSize: 20, fontWeight: 700, marginTop: 16 }}>Drag & drop your video here</div>
+                            <div style={{ color: T.textSub, marginTop: 8 }}>or click to browse files</div>
+                            <div style={{ color: T.textSub, fontSize: 12, marginTop: 8 }}>MP4, WebM, MOV • Up to 4GB</div>
+                        </div>
+                    ) : (
+                        <div style={{ background: T.surface2, borderRadius: 12, padding: 16, marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+                            <Icon name="play" size={32} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600 }}>{selectedFile.name}</div>
+                                <div style={{ fontSize: 12, color: T.textSub }}>{(selectedFile.size / 1024 / 1024).toFixed(1)} MB</div>
+                            </div>
+                            <button onClick={() => setSelectedFile(null)} style={{ background: "none", border: "none", color: T.textSub, cursor: "pointer" }}><Icon name="close" size={20} /></button>
+                        </div>
+                    )}
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div>
+                            <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" }}>Title *</label>
+                            <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Give your video a catchy title..." maxLength={100} style={{ width: "100%", background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, outline: "none" }} />
+                            <div style={{ textAlign: "right", fontSize: 11, color: T.textSub, marginTop: 4 }}>{form.title.length}/100</div>
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" }}>Description</label>
+                            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe your video..." rows={4} style={{ width: "100%", background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, outline: "none", resize: "vertical" }} />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" }}>Tags</label>
+                            <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} placeholder="india, tech, tutorial (comma separated)" style={{ width: "100%", background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, outline: "none" }} />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" }}>Category</label>
+                            <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} style={{ width: "100%", background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, outline: "none" }}>
+                                {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+
+                        <div style={{ background: T.surface2, borderRadius: 12, padding: 16, border: `1px solid ${T.border}` }}>
+                            <div style={{ fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>✨ AI Title Suggestions</div>
+                            <button onClick={generateAITitle} disabled={aiLoading} style={{ background: "linear-gradient(135deg, #ff0000, #cc0044)", color: "#fff", border: "none", borderRadius: 20, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600, marginBottom: aiTitle ? 12 : 0 }}>
+                                {aiLoading ? "Generating..." : "Generate AI Titles"}
+                            </button>
+                            {aiTitle && (
+                                <div style={{ fontSize: 13, lineHeight: 2, whiteSpace: "pre-wrap" }}>
+                                    {aiTitle.split("\n").filter(Boolean).map((title, i) => (
+                                        <div key={i} onClick={() => { const t = title.replace(/^\d+\.\s*/, ""); setForm(f => ({ ...f, title: t })); }} style={{ padding: "4px 8px", borderRadius: 6, cursor: "pointer", color: T.text, transition: "background 0.2s" }}
+                                            onMouseEnter={e => e.currentTarget.style.background = T.hover}
+                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                            {title}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {uploading ? (
+                            <div>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13 }}>
+                                    <span>Uploading...</span><span>{Math.round(progress)}%</span>
+                                </div>
+                                <div style={{ height: 8, background: T.surface2, borderRadius: 4, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: `${progress}%`, background: T.accent, borderRadius: 4, transition: "width 0.2s" }} />
+                                </div>
+                            </div>
+                        ) : (
+                            <button onClick={handleUpload} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 20, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+                                <Icon name="upload" size={20} /> Upload Video
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // LOGIN PAGE
+        // ============================================================
+        function LoginPage({ T, navigate, setCurrentUser, showToast }) {
+            const [isLogin, setIsLogin] = useState(true);
+            const [form, setForm] = useState({ username: "", email: "", password: "", confirmPassword: "" });
+            const [loading, setLoading] = useState(false);
+            const [errors, setErrors] = useState({});
+
+            const validate = () => {
+                const e = {};
+                if (!form.email) e.email = "Email required";
+                if (!form.password) e.password = "Password required";
+                if (!isLogin) {
+                    if (!form.username) e.username = "Username required";
+                    if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords don't match";
+                    if (form.password.length < 6) e.password = "Min 6 characters";
+                }
+                return e;
+            };
+
+            const handleSubmit = async () => {
+                const e = validate();
+                setErrors(e);
+                if (Object.keys(e).length) return;
+                setLoading(true);
+                
+                try {
+                    if (isLogin) {
+                        const user = await FirebaseDB.getUserByEmail(form.email);
+                        if (user && user.password === form.password) {
+                            setCurrentUser(user);
+                            showToast(`Welcome back, ${user.username}! 🎉`);
+                            navigate("home");
+                        } else {
+                            setErrors({ email: "Invalid credentials" });
+                            showToast("Invalid email or password", "error");
+                        }
+                    } else {
+                        const existingUser = await FirebaseDB.getUserByEmail(form.email);
+                        if (existingUser) {
+                            setErrors({ email: "Email already registered" });
+                            showToast("Email already in use", "error");
+                        } else {
+                            const newUser = {
+                                username: form.username,
+                                email: form.email,
+                                password: form.password,
+                                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username}`,
+                                bio: "New creator on IndiaTube 🇮🇳",
+                                subscribers: 0,
+                                banner: "#1a1a2e"
+                            };
+                            const created = await FirebaseDB.createUser(newUser);
+                            setCurrentUser(created);
+                            showToast(`Welcome to IndiaTube, ${form.username}! 🎉`);
+                            navigate("home");
+                        }
+                    }
+                } catch (error) {
+                    showToast("Authentication failed", "error");
+                }
+                setLoading(false);
+            };
+
+            const Field = ({ name, type = "text", placeholder, label }) => (
+                <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block", color: errors[name] ? "#ff4444" : T.text }}>{label}</label>
+                    <input type={type} value={form[name]} onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))} onKeyDown={e => e.key === "Enter" && handleSubmit()} placeholder={placeholder} style={{ width: "100%", background: T.surface2, border: `1px solid ${errors[name] ? "#ff4444" : T.border}`, borderRadius: 10, padding: "12px 16px", color: T.text, fontSize: 14, outline: "none", transition: "border 0.2s" }} />
+                    {errors[name] && <div style={{ fontSize: 12, color: "#ff4444", marginTop: 4 }}>{errors[name]}</div>}
+                </div>
+            );
+
+            return (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 56px)", padding: "24px 16px" }}>
+                    <div className="fade-in" style={{ width: "100%", maxWidth: 420, background: T.surface, borderRadius: 20, padding: 32, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+                        <div style={{ textAlign: "center", marginBottom: 32 }}>
+                            <div style={{ background: "#ff0000", borderRadius: 12, padding: "8px 16px", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                                <Icon name="play" size={24} />
+                                <span style={{ fontWeight: 800, fontSize: 20 }}>IndiaTube</span>
+                            </div>
+                            <div style={{ color: T.textSub, fontSize: 14 }}>{isLogin ? "Sign in to continue" : "Create your account"}</div>
+                        </div>
+
+                        <div style={{ background: T.surface2, borderRadius: 10, padding: 12, marginBottom: 20, fontSize: 12 }}>
+                            <div style={{ fontWeight: 600, marginBottom: 6 }}>🎯 Demo Accounts:</div>
+                            {MOCK_USERS.slice(0, 2).map(u => (
+                                <div key={u.id} onClick={() => setForm(f => ({ ...f, email: u.email, password: u.password }))} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 0", color: T.textSub }}
+                                    onMouseEnter={e => e.currentTarget.style.color = T.accent}
+                                    onMouseLeave={e => e.currentTarget.style.color = T.textSub}>
+                                    <img src={u.avatar} style={{ width: 20, height: 20, borderRadius: "50%" }} alt="" />
+                                    {u.email} / pass123
+                                </div>
+                            ))}
+                        </div>
+
+                        {!isLogin && <Field name="username" placeholder="Choose a username" label="Username" />}
+                        <Field name="email" type="email" placeholder="your@email.com" label="Email" />
+                        <Field name="password" type="password" placeholder="••••••••" label="Password" />
+                        {!isLogin && <Field name="confirmPassword" type="password" placeholder="••••••••" label="Confirm Password" />}
+
+                        <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", background: T.accent, color: "#fff", border: "none", borderRadius: 10, padding: 14, fontSize: 16, fontWeight: 700, cursor: "pointer", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: loading ? 0.7 : 1 }}>
+                            {loading ? "Please wait..." : (isLogin ? "Sign In 🚀" : "Create Account 🎉")}
+                        </button>
+
+                        <div style={{ textAlign: "center", marginTop: 20, color: T.textSub, fontSize: 14 }}>
+                            {isLogin ? "New to IndiaTube?" : "Already have an account?"}{" "}
+                            <span onClick={() => { setIsLogin(!isLogin); setErrors({}); }} style={{ color: T.accent, cursor: "pointer", fontWeight: 600 }}>
+                                {isLogin ? "Create account" : "Sign in"}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // SEARCH PAGE
+        // ============================================================
+        function SearchPage({ T, query, setQuery, navigate, currentUser, showToast }) {
+            const [results, setResults] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [filter, setFilter] = useState("All");
+            const [aiAnswer, setAiAnswer] = useState("");
+            const [aiLoading, setAiLoading] = useState(false);
+
+            useEffect(() => {
+                const searchVideos = async () => {
+                    if (!query) {
+                        const vids = await FirebaseDB.getVideos();
+                        setResults(vids);
+                        return;
+                    }
+                    setLoading(true);
+                    const vids = await FirebaseDB.getVideos();
+                    const q = query.toLowerCase();
+                    const filtered = vids.filter(v =>
+                        v.title.toLowerCase().includes(q) || v.channelName.toLowerCase().includes(q) ||
+                        v.tags.some(t => t.toLowerCase().includes(q)) || v.category.toLowerCase().includes(q)
+                    );
+                    setResults(filtered);
+                    setLoading(false);
+                };
+                searchVideos();
+            }, [query]);
+
+            const handleAISearch = async () => {
+                if (!query) return;
+                setAiLoading(true);
+                try {
+                    const response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 800,
+                            messages: [{ role: "user", content: `A user on IndiaTube (Indian YouTube-like platform) searched for: "${query}"\n\nProvide a brief, helpful answer in 2-3 sentences relevant to Indian context. Also suggest 3 related search terms they might find useful. Format: Answer paragraph, then "Related: term1, term2, term3"` }]
+                        })
+                    });
+                    const data = await response.json();
+                    setAiAnswer(data.content?.[0]?.text || "");
+                } catch {
+                    setAiAnswer("");
+                }
+                setAiLoading(false);
+            };
+
+            return (
+                <div style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 16px 80px" }}>
+                    <div style={{ display: "flex", gap: 0, marginBottom: 20 }}>
+                        <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleAISearch()} placeholder="Search IndiaTube…" style={{ flex: 1, background: T.surface2, border: `1px solid ${T.border}`, borderRight: "none", borderRadius: "24px 0 0 24px", padding: "12px 20px", color: T.text, fontSize: 15, outline: "none" }} />
+                        <button onClick={() => {}} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderLeft: "none", borderRadius: "0 24px 24px 0", padding: "12px 20px", color: T.textSub, cursor: "pointer" }}>
+                            <Icon name="search" size={20} />
+                        </button>
+                    </div>
+
+                    {query && (
+                        <div style={{ marginBottom: 20 }}>
+                            {!aiAnswer && !aiLoading && (
+                                <button onClick={handleAISearch} style={{ background: "linear-gradient(135deg, #ff0000, #cc0044)", color: "#fff", border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                                    ✨ Ask AI about "{query}"
+                                </button>
+                            )}
+                            {aiLoading && <div style={{ background: T.surface2, borderRadius: 12, padding: 16 }} className="pulse">🤔 AI is thinking...</div>}
+                            {aiAnswer && (
+                                <div style={{ background: T.surface2, borderRadius: 12, padding: 16, borderLeft: `3px solid ${T.accent}` }} className="fade-in">
+                                    <div style={{ fontWeight: 700, fontSize: 13, color: T.accent, marginBottom: 8 }}>✨ AI Answer</div>
+                                    <div style={{ fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{aiAnswer}</div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 16, scrollbarWidth: "none" }}>
+                        {["All", ...CATEGORIES.filter(c => c !== "All"), "Shorts"].map(f => (
+                            <button key={f} onClick={() => setFilter(f)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: `1px solid ${T.border}`, cursor: "pointer", fontSize: 13, fontWeight: 500, background: filter === f ? T.text : T.surface2, color: filter === f ? T.bg : T.text }}>
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+
+                    {query && <div style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>About {results.length} results for "{query}"</div>}
+
+                    {loading ? (
+                        <div style={{ textAlign: "center", padding: 40, color: T.textSub }}>Searching...</div>
+                    ) : results.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: 60 }}>
+                            <Icon name="search" size={64} />
+                            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 16 }}>No results found</div>
+                            <div style={{ color: T.textSub, marginTop: 8 }}>Try different keywords</div>
+                        </div>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                            {results.map(v => (
+                                <div key={v.id} onClick={() => navigate(v.isShort ? "shorts" : "watch", { video: v })} className="hover-scale" style={{ display: "flex", gap: 16, cursor: "pointer", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
+                                    <div style={{ position: "relative", flexShrink: 0, width: v.isShort ? 120 : 240, height: v.isShort ? 200 : 135, borderRadius: 10, overflow: "hidden" }}>
+                                        <img src={v.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" loading="lazy" />
+                                        <span style={{ position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 11, padding: "1px 4px", borderRadius: 3 }}>{v.duration}</span>
+                                        {v.isShort && <span style={{ position: "absolute", top: 4, left: 4, background: "#ff0000", color: "#fff", fontSize: 10, padding: "1px 4px", borderRadius: 3, fontWeight: 700 }}>SHORT</span>}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600, fontSize: 15, lineHeight: 1.4, marginBottom: 6 }}>{v.title}</div>
+                                        <div style={{ fontSize: 13, color: T.textSub, marginBottom: 4 }}>{formatViews(v.views)} views • {formatDate(v.uploadDate)}</div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${v.channelName}`} style={{ width: 22, height: 22, borderRadius: "50%" }} alt="" />
+                                            <span style={{ fontSize: 13, color: T.textSub }}>{v.channelName}</span>
+                                        </div>
+                                        <div style={{ fontSize: 13, color: T.textSub, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{v.description}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================================
+        // NOTIFICATIONS PANEL
+        // ============================================================
+        function NotificationsPanel({ T, onClose, navigate }) {
+            const notifs = [
+                { id: 1, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya", text: "PriyaMusic uploaded a new video: ‘Bollywood Mix 2025’", time: "2 hours ago", unread: true },
+                { id: 2, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ankit", text: "TechWithAnkit started a live stream", time: "5 hours ago", unread: true },
+                { id: 3, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha", text: "Someone liked your comment on ‘Mumbai Street Food’", time: "1 day ago", unread: false },
+            ];
+
+            return (
+                <div className="fade-in" style={{ position: "absolute", top: 40, right: 0, width: 320, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.4)", zIndex: 200, overflow: "hidden" }}>
+                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontWeight: 700, fontSize: 15 }}>Notifications</span>
+                        <button onClick={onClose} style={{ background: "none", border: "none", color: T.textSub, cursor: "pointer" }}><Icon name="close" size={18} /></button>
+                    </div>
+                    {notifs.map(n => (
+                        <div key={n.id} style={{ padding: "12px 16px", display: "flex", gap: 10, borderBottom: `1px solid ${T.border}`, background: n.unread ? `${T.accent}08` : "transparent", cursor: "pointer" }}
+                            onMouseEnter={e => e.currentTarget.style.background = T.hover}
+                            onMouseLeave={e => e.currentTarget.style.background = n.unread ? `${T.accent}08` : "transparent"}>
+                            <div style={{ position: "relative" }}>
+                                <img src={n.avatar} style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0 }} alt="" />
+                                {n.unread && <div style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, background: T.accent, borderRadius: "50%", border: `2px solid ${T.surface}` }} />}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, lineHeight: 1.5 }}>{n.text}</div>
+                                <div style={{ fontSize: 11, color: T.textSub, marginTop: 3 }}>{n.time}</div>
+                            </div>
+                        </div>
+                    ))}
+                    <div style={{ padding: "12px 16px", textAlign: "center" }}>
+                        <span style={{ fontSize: 13, color: T.accent, cursor: "pointer", fontWeight: 600 }}>See all notifications</span>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================================
+        // MAIN APP
+        // ============================================================
+        function IndiaTube() {
+            const [darkMode, setDarkMode] = useState(true);
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [page, setPage] = useState("home");
+            const [selectedVideo, setSelectedVideo] = useState(null);
+            const [searchQuery, setSearchQuery] = useState("");
+            const [activeCategory, setActiveCategory] = useState("All");
+            const [profileUserId, setProfileUserId] = useState(null);
+            const [toast, setToast] = useState(null);
+            const [notifications, setNotifications] = useState([]);
+            const [showNotifications, setShowNotifications] = useState(false);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const initApp = async () => {
+                    await FirebaseDB.init();
+                    setLoading(false);
+                };
+                initApp();
+            }, []);
+
+            const showToast = useCallback((msg, type = "success") => {
+                setToast({ msg, type });
+                setTimeout(() => setToast(null), 3000);
+            }, []);
+
+            const navigate = useCallback((p, opts = {}) => {
+                setPage(p);
+                setSidebarOpen(false);
+                if (opts.video) setSelectedVideo(opts.video);
+                if (opts.userId) setProfileUserId(opts.userId);
+                if (opts.query !== undefined) setSearchQuery(opts.query);
+                window.scrollTo(0, 0);
+            }, []);
+
+            const theme = {
+                bg: darkMode ? "#0f0f0f" : "#f9f9f9",
+                surface: darkMode ? "#1a1a1a" : "#ffffff",
+                surface2: darkMode ? "#272727" : "#f2f2f2",
+                border: darkMode ? "#3f3f3f" : "#e5e5e5",
+                text: darkMode ? "#f1f1f1" : "#0f0f0f",
+                textSub: darkMode ? "#aaaaaa" : "#606060",
+                accent: "#ff0000",
+                accentHover: "#cc0000",
+                hover: darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+            };
+
+            const T = theme;
+
+            if (loading) {
+                return (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: T.bg, color: T.text }}>
+                        <div style={{ textAlign: "center" }}>
+                            <div style={{ background: "#ff0000", borderRadius: 12, padding: "12px 24px", display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                                <Icon name="play" size={32} />
+                                <span style={{ fontWeight: 800, fontSize: 24 }}>IndiaTube</span>
+                            </div>
+                            <div className="pulse" style={{ fontSize: 14, color: T.textSub }}>Loading your experience...</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div style={{ background: T.bg, color: T.text, minHeight: "100vh", fontFamily: "'Segoe UI', system-ui, sans-serif", transition: "background 0.3s, color 0.3s" }}>
+                    {/* TOP NAV */}
+                    <nav style={{ position: "fixed", top: 0, left: 0, right: 0, height: 56, background: T.bg, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", padding: "0 16px", gap: 12, zIndex: 100, backdropFilter: "blur(10px)" }}>
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: T.text, cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex" }}>
+                            <Icon name="menu" size={22} />
+                        </button>
+                        <div onClick={() => navigate("home")} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", flexShrink: 0 }}>
+                            <div style={{ background: "#ff0000", borderRadius: 8, padding: "4px 8px", display: "flex", alignItems: "center" }}>
+                                <Icon name="play" size={18} className="" />
+                            </div>
+                            <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: -0.5 }}>India<span style={{ color: "#ff0000" }}>Tube</span></span>
+                            <span style={{ fontSize: 10, color: T.textSub, fontWeight: 600, background: T.surface2, padding: "1px 4px", borderRadius: 4 }}>IN</span>
+                        </div>
+
+                        <div className="desktop-only" style={{ flex: 1, maxWidth: 600, display: "flex", gap: 0 }}>
+                            <input
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                onKeyDown={e => e.key === "Enter" && searchQuery && navigate("search", { query: searchQuery })}
+                                placeholder="Search videos, channels..."
+                                style={{ flex: 1, background: T.surface2, border: `1px solid ${T.border}`, borderRight: "none", borderRadius: "20px 0 0 20px", padding: "8px 16px", color: T.text, outline: "none", fontSize: 14 }}
+                            />
+                            <button onClick={() => searchQuery && navigate("search", { query: searchQuery })} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderLeft: "none", borderRadius: "0 20px 20px 0", padding: "8px 16px", color: T.textSub, cursor: "pointer", display: "flex", alignItems: "center" }}>
+                                <Icon name="search" size={18} />
+                            </button>
+                        </div>
+
+                        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                            <button onClick={() => navigate("search", { query: "" })} className="mobile-only" style={{ background: "none", border: "none", color: T.text, cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex" }}>
+                                <Icon name="search" size={22} />
+                            </button>
+                            <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: "none", color: T.text, cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex" }}>
+                                <Icon name={darkMode ? "sun" : "moon"} size={20} />
+                            </button>
+                            {currentUser && (
+                                <>
+                                    <button onClick={() => navigate("upload")} style={{ background: "none", border: "none", color: T.text, cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex" }}>
+                                        <Icon name="upload" size={22} />
+                                    </button>
+                                    <div style={{ position: "relative" }}>
+                                        <button onClick={() => setShowNotifications(!showNotifications)} style={{ background: "none", border: "none", color: T.text, cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex" }}>
+                                            <Icon name="bell" size={22} />
+                                            <span className="notif-badge">3</span>
+                                        </button>
+                                        {showNotifications && <NotificationsPanel T={T} onClose={() => setShowNotifications(false)} navigate={navigate} />}
+                                    </div>
+                                    <img src={currentUser.avatar} onClick={() => navigate("profile", { userId: currentUser.id })} style={{ width: 32, height: 32, borderRadius: "50%", cursor: "pointer", border: `2px solid ${T.accent}` }} alt="avatar" />
+                                </>
+                            )}
+                            {!currentUser && (
+                                <button onClick={() => navigate("login")} style={{ background: "none", border: `1px solid #3ea6ff`, color: "#3ea6ff", borderRadius: 18, padding: "6px 14px", cursor: "pointer", fontSize: 14, fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <Icon name="india" size={16} /> Sign In
+                                </button>
+                            )}
+                        </div>
+                    </nav>
+
+                    {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+                    <aside className={sidebarOpen ? "slide-in" : ""} style={{
+                        position: "fixed", top: 0, left: sidebarOpen ? 0 : -240, width: 240, height: "100vh", background: T.bg, borderRight: `1px solid ${T.border}`,
+                        zIndex: 101, paddingTop: 64, overflowY: "auto", transition: "left 0.3s ease"
+                    }}>
+                        <SidebarContent T={T} navigate={navigate} page={page} currentUser={currentUser} onClose={() => setSidebarOpen(false)} />
+                    </aside>
+
+                    <main style={{ paddingTop: 56, minHeight: "100vh" }}>
+                        {page === "home" && <HomePage T={T} navigate={navigate} activeCategory={activeCategory} setActiveCategory={setActiveCategory} currentUser={currentUser} showToast={showToast} />}
+                        {page === "watch" && selectedVideo && <WatchPage T={T} video={selectedVideo} navigate={navigate} currentUser={currentUser} showToast={showToast} />}
+                        {page === "shorts" && <ShortsPage T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} />}
+                        {page === "profile" && <ProfilePage T={T} userId={profileUserId || (currentUser?.id)} navigate={navigate} currentUser={currentUser} showToast={showToast} />}
+                        {page === "upload" && <UploadPage T={T} navigate={navigate} currentUser={currentUser} showToast={showToast} />}
+                        {page === "login" && <LoginPage T={T} navigate={navigate} setCurrentUser={setCurrentUser} showToast={showToast} />}
+                        {page === "search" && <SearchPage T={T} query={searchQuery} setQuery={setSearchQuery} navigate={navigate} currentUser={currentUser} showToast={showToast} />}
+                    </main>
+
+                    {toast && (
+                        <div className="fade-in" style={{ position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)", background: toast.type === "error" ? "#c00" : "#333", color: "#fff", padding: "10px 20px", borderRadius: 8, zIndex: 999, fontSize: 14, maxWidth: 300, textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>
+                            {toast.msg}
+                        </div>
+                    )}
+
+                    <div className="mobile-only" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: T.bg, borderTop: `1px solid ${T.border}`, display: "flex", zIndex: 100 }}>
+                        {[["home","Home","home"],["fire","Trending","home"],["shorts","Shorts","shorts"],["subscribe","Subscriptions","profile"],["library","Library","profile"]].map(([icon, label, p]) => (
+                            <button key={icon} onClick={() => navigate(p)} style={{ flex: 1, background: "none", border: "none", color: page === p ? T.accent : T.textSub, cursor: "pointer", padding: "10px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, fontSize: 10 }}>
+                                <Icon name={icon} size={20} />
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.createRoot(document.getElementById('root')).render(<IndiaTube />);
+    </script>
+</body>
+</html>
